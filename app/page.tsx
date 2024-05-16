@@ -2,6 +2,7 @@ import Header from './components/header'
 import About from './components/about'
 import Experience from './components/experience'
 import Resume from './components/resume'
+import Projects from './components/projects'
 
 export default function Home() {
   return (
@@ -12,9 +13,7 @@ export default function Home() {
             <About/>
             <Experience/>
             <Resume/>
-            <div id={'projects'}>
-                Projects coming soon.
-            </div>
+            <Projects/>
         </main>
       </div>
     </div>

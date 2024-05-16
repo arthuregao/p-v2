@@ -1,6 +1,6 @@
 export default function Resume() {
     return (
-        <div className="mt-12"><a
+        <div className="mt-12 mb-12"><a
             className="inline-flex items-baseline font-medium leading-tight text-slate-200 hover:text-teal-300 focus-visible:text-teal-300 group/link text-base"
             href="/resume.pdf" target="_blank" rel="noreferrer noopener"
             aria-label="View Full Résumé (opens in a new tab)"><span>See my full <span className="inline-block">résumé<svg
