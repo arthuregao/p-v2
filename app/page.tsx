@@ -12,6 +12,9 @@ export default function Home() {
             <About/>
             <Experience/>
             <Resume/>
+            <div id={'projects'}>
+                Projects coming soon.
+            </div>
         </main>
       </div>
     </div>

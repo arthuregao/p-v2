@@ -10,10 +10,10 @@ export default function About() {
             </div>
             <div>
                 <p className={'mb-4'}>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id porta nibh venenatis cras sed. Purus gravida quis blandit turpis. Parturient montes nascetur ridiculus mus. Fringilla urna porttitor rhoncus dolor purus non enim praesent elementum. Dui accumsan sit amet nulla facilisi morbi tempus iaculis. Eu volutpat odio facilisis mauris sit amet massa vitae.
+                    I recently graduated with a Computer Science degree, focusing on projects that blend user interaction with cutting-edge technology. One notable project was a smart chess board I developed using embedded Rust, which automatically identifies piece positions and suggests valid moves to players. My enthusiasm for embedded development drives me to create practical, innovative solutions.
                 </p>
                 <p className={'mb-4'}>
-                    Vitae auctor eu augue ut lectus. Ut tortor pretium viverra suspendisse potenti nullam ac. Diam vel quam elementum pulvinar etiam non. Lectus magna fringilla urna porttitor rhoncus dolor purus non. Viverra vitae congue eu consequat ac felis donec et. Ornare aenean euismod elementum nisi quis eleifend quam. Eleifend mi in nulla posuere. Feugiat nibh sed pulvinar proin gravida hendrerit. Sed elementum tempus egestas sed sed risus.
+                    I’m looking for opportunities to bring my skills to a team that values groundbreaking work in embedded systems.
                 </p>
             </div>
         </section>
