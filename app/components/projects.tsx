@@ -66,7 +66,7 @@ export default function Projects() {
                         <Project link={'https://youtu.be/71GhNPpc5WA'} project_name={'Projection Mapping'} project_description={'A software project to lower the barrier of entry to animated storytelling. We developed an application that allows upper elementary and middle school aged students access to animation and projection mapping as a medium for storytelling. This project is being developed for test runs in Toronto classrooms.'} image_path={'/projection.webp'} image_alt={'Projection Mapping Demo'} />
                     </li>
                     <li className={'mb-12'}>
-                        <Project link={''} project_name={'GPT Parsing'} project_description={'A research project involving counsels petitioning for cases to SCOTUS. The data gathered had a semi-formatted \'counsels\' field and as such required parsing. We ran the data through a parsing algorithm that involved GPT-4, extracting formatted data from the dataset to do further research on. '} image_path={'/gpt.webp'} image_alt={'ChatGPT logo'}/>
+                        <Project link={''} project_name={'GPT Parsing'} project_description={'A research project involving counsels petitioning for cases to SCOTUS. The data gathered had a semi-formatted \'counsels\' field and as such required parsing. We ran the data through a parsing algorithm that involved GPT-4, extracting formatted data from the dataset to do further research on. '} image_path={'/ChatGPT_logo.svg'} image_alt={'ChatGPT logo'}/>
                     </li>
                 </ul>
             </div>
