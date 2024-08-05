@@ -60,7 +60,7 @@ export default function ProjectionMapping() {
                 By combining these existing technologies with an asset manager, we created a cohesive experience that
                 allows users to create their own stories. Simple animations can be made in as little as five minutes,
                 making the tool both powerful and user-friendly. Elementary and middle school teachers have shown
-                significant interest in the technology, as it empowers students' creativity, enabling them to bring
+                significant interest in the technology, as it empowers students` creativity, enabling them to bring
                 their imaginations to life.
             </p>
             <h3 className="text-xl font-semibold my-4" id="conclusion">Conclusion</h3>

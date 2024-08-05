@@ -42,7 +42,7 @@ export default function Chess() {
                 The sensing circuit was designed as an 8x8 magnetic hall effect switch matrix. Each hall effect switch
                 was wired in series with a diode to a unique combination of column and row. By putting +5V on one column
                 at a time and reading the voltage on each individual row, we could determine the status of 64 board
-                squares using just 16 GPIO ports on the microcontroller. Given chess's predefined starting position, we
+                squares using just 16 GPIO ports on the microcontroller. Given chess`s predefined starting position, we
                 could track the current board position by monitoring changes since the initial setup. This approach
                 eliminated the need for circuitry to identify specific pieces on any square.
             </p>

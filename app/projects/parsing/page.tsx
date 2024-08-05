@@ -76,19 +76,19 @@ export default function SCOTUSDataParsing() {
                 </table>
                 <p className="text-lg mb-4">
                     We read and extract the counsel string from the data so that it can be passed into the GPT API. We
-                    prompt GPT API with the following "System Instructions":
+                    prompt GPT API with the following &quotSystem Instructions&quot:
                 </p>
                 <div className="p-4 bg-gray-100 rounded-lg shadow-md">
   <pre className="whitespace-pre-wrap break-words">
     <code className="text-sm text-gray-800">
-      SYSTEM_INSTRUCTIONS = '''<br/>
+      SYSTEM_INSTRUCTIONS = ```<br/>
       You are a data processing assistant. In the given data, identify all individuals,
       their position, law firm, city, and state. Return the data in JSON format. Every
       lawyer should be associated to a law firm. Fill any cell where data is not
-      available as N/A. The JSON should contain a list keyed with "individuals"
+      available as N/A. The JSON should contain a list keyed with `individuals`
       listing all of the individuals in the data. The keys for each individual should be:
-      "name", "position", "law_firm", "city", "state"<br/>
-      '''
+      `name`, `position`, `law_firm`, `city`, `state`<br/>
+      ```
     </code>
   </pre>
                 </div>
@@ -104,7 +104,7 @@ export default function SCOTUSDataParsing() {
                 <p className="text-lg mb-4">
                     This string sees no additional processing before GPT. It is sent in its raw format to the API. The
                     GPT API uses a messages list to keep track of the chat history. The initial prompt is sent as a
-                    "system" instruction, and the unparsed string as a "user" message.
+                    `system` instruction, and the unparsed string as a `user` message.
                 </p>
 
                 <h3 className="text-xl font-semibold my-4">1.2 GPT Models Used For Parsing</h3>
@@ -172,16 +172,16 @@ export default function SCOTUSDataParsing() {
                     We have instructed GPT to return the data in a JSON format, therefore, the result is very structured
                     although GPT sometimes appends extraneous data in front of the open curly brace of a JSON object. We
                     parse the return string and only keep the data contained between the first opening curly brace
-                    '{' and the last closing curly brace '}'.
+                    and the last closing curly brace.
                 </p>
                 <p className="text-lg mb-4">
-                    The resulting JSON contains an "individuals" list containing nested JSONs with the key-value pairs
+                    The resulting JSON contains an `individuals` list containing nested JSONs with the key-value pairs
                     corresponding to the requested data: name, position, law_firm, city, and state. The resulting JSON
                     object returned by GPT from the above example is shown below:
                 </p>
-                <div class="p-4 bg-gray-100 rounded-lg shadow-md">
-  <pre class="whitespace-pre-wrap break-words">
-    <code class="text-sm text-gray-800">
+                <div className="p-4 bg-gray-100 rounded-lg shadow-md">
+  <pre className="whitespace-pre-wrap break-words">
+    <code className="text-sm text-gray-800">
 {`
 {
   "individuals": [
@@ -226,9 +226,9 @@ export default function SCOTUSDataParsing() {
                     named by the row. Since our example came from row 10, the final JSON file is `10-info.json` which
                     looks like:
                 </p>
-                <div class="p-4 bg-gray-100 rounded-lg shadow-md">
-                      <pre class="whitespace-pre-wrap break-words">
-                        <code class="text-sm text-gray-800">
+                <div className="p-4 bg-gray-100 rounded-lg shadow-md">
+                      <pre className="whitespace-pre-wrap break-words">
+                        <code className="text-sm text-gray-800">
                         {`
 {
   "individuals": [
@@ -287,7 +287,7 @@ export default function SCOTUSDataParsing() {
                         Fuzz</a> Python package. For more information on how fuzzy matching works, see <a
                         href="https://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/"
                         className="text-blue-500 underline">this article</a>. We selected a partial ratio threshold of
-                        85 or higher to designate a "highly similar name." This means that while GPT may have generated
+                        85 or higher to designate a `highly similar name.` This means that while GPT may have generated
                         slightly different variations of the name, a similarity score above 85 indicates that they refer
                         to the same individual.
                     </li>
@@ -296,7 +296,7 @@ export default function SCOTUSDataParsing() {
                         this category: mismatched order, and completely different parses. The first category is a result
                         of how the comparison algorithm compares index to index strictly. If a name appears as the first
                         index in one parsing iteration and happens to appear in the second index in another iteration,
-                        it would result in a "highly different" mismatch. In this case, the comparison algorithm drops
+                        it would result in a `highly different` mismatch. In this case, the comparison algorithm drops
                         the strict index requirement and attempts to match to any index of the list.
                     </li>
                     <li>
@@ -371,9 +371,9 @@ export default function SCOTUSDataParsing() {
                     Through a process similar to the initial parse, the list of unique names were once again sent
                     through the GPT API. The system instructions were:
                 </p>
-                <div class="p-4 bg-gray-100 rounded-lg shadow-md">
-                      <pre class="whitespace-pre-wrap break-words">
-                        <code class="text-sm text-gray-800">
+                <div className="p-4 bg-gray-100 rounded-lg shadow-md">
+                      <pre className="whitespace-pre-wrap break-words">
+                        <code className="text-sm text-gray-800">
                             {`
 "Given this list of names, extract the first, middle, and last names along with any suffixes and prefixes if applicable. Format the data as json. Key the list of parsed names with people with each person having the keys: first_name, middle_name, last_name, prefix, suffix. Use 'N/A' if any key is not applicable"
 `}
