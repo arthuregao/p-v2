@@ -57,35 +57,45 @@ export default function Experience() {
                 <ol className={'group/list'}>
                     <li className={'mb-12'}>
                         <ExperienceBox
+                            time={'Feb 2024 - Present'}
+                            role={'Research Assistant'}
+                            company={'University of Toronto'}
+                            link={'https://www.law.utoronto.ca'}
+                            description={'Developed and refined various data parsing methods and algorithms to parse semi-structured data into consistently structured data enabling further research.'}/>
+                    </li>
+                    <li className={'mb-12'}>
+                        <ExperienceBox
                             time='Winter Semester 2023 & 2024'
                             role='CSC258 Teaching Assistant'
                             company='University of Toronto'
                             link={'https://cs.toronto.edu'}
-                            description='During my time as a Teaching Assistant, I provided technical support to students in digital logic and MIPS assembly. This included troubleshooting within the lab setting, grading tests, and answering student questions. My dedication and expertise led to my recognition by the teaching team as the most experienced lab TA.'
+                            description='Provided technical support to students by troubleshooting labs, grading tests, and answering questions on digital logic and MIPS assembly.'
                         />
                     </li>
                     <li className={'mb-12'}>
-                        <ExperienceBox time={'May - Sept 2023'}
-                                       role={'Web Developer'}
-                                       company={'Bank of Canada'}
-                                       link={'https://bankofcanada.ca'}
-                                       description={'As a Web Developer at the Bank of Canada, I played a key role in modernizing their web infrastructure. I assisted in the transition from a monolithic stack to a Kubernetes and Docker-based distributed system, demonstrating strong problem-solving by resolving compatibility issues. Within an Agile environment, I actively participated in sprint planning and retrospectives.  My technical expertise shines through in my pioneering work with Amcharts, where I reduced render-blocking time by 4x. Additionally, I significantly improved video embed rendering speeds by 250x through the development and documentation of a new YouTube rendering component.'}
+                        <ExperienceBox
+                            time={'May - Sept 2023'}
+                            role={'Web Developer'}
+                            company={'Bank of Canada'}
+                            link={'https://bankofcanada.ca'}
+                            description={'Worked on the web team developing new features and performing bug fixes for all external and internal bank websites in an Agile development environment.'}
                         />
                     </li>
-                    <li className={'mb-12'}>
-                        <ExperienceBox time={'2022 - 2024'}
-                                       role={'Director of Safety'}
-                                       company={'U of T Ski and Snowboard Club'}
-                                       description={'As Director of Safety for the University of Toronto Ski and Snowboard Club, I spearheaded an eight-member Crisis Management Response Team, ensuring readiness for challenges at large-scale ski events. My ability to think decisively under pressure was essential in rapidly implementing solutions to unforeseen trip complications, positively impacting the experience of over 1000 attendees.'}
-                                       link={'https://utssc.com'}
-                        />
-                    </li>
+                    {/*<li className={'mb-12'}>*/}
+                    {/*    <ExperienceBox*/}
+                    {/*        time={'2022 - 2024'}*/}
+                    {/*        role={'Director of Safety'}*/}
+                    {/*        company={'U of T Ski and Snowboard Club'}*/}
+                    {/*        description={'As Director of Safety for the University of Toronto Ski and Snowboard Club, I spearheaded an eight-member Crisis Management Response Team, ensuring readiness for challenges at large-scale ski events. My ability to think decisively under pressure was essential in rapidly implementing solutions to unforeseen trip complications, positively impacting the experience of over 1000 attendees.'}*/}
+                    {/*        link={'https://utssc.com'}*/}
+                    {/*    />*/}
+                    {/*</li>*/}
                     <li className={'mb-12'}>
                         <ExperienceBox
                             time={'June - Sept 2021'}
                             role={'Director of Video'}
                             company={'National Stiltwalkers of Canada'}
-                            description={'As Director of Video for the National Stiltwalkers of Canada, I directed and produced two live shows reaching over 5,000 viewers. Under a strict 30-day deadline, I collaborated with artistic and technical directors while developing innovative solutions like a chroma key tracking system in Unreal Engine 5. This system enabled real-time background adjustments, and I further streamlined production by integrating Unreal Engine output with the Blackmagic API for automated background changes.'}
+                            description={'Directed the photography and software development for two live shows reaching over 5000 live viewers.'}
                             link={'https://www.nationalstiltwalkersofcanada.com'}
                         />
                     </li>

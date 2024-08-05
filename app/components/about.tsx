@@ -10,10 +10,10 @@ export default function About() {
             </div>
             <div>
                 <p className={'mb-4'}>
-                    I recently graduated with a Computer Science degree, focusing on projects that blend user interaction with cutting-edge technology. One notable project was a smart chess board I developed using embedded Rust, which automatically identifies piece positions and suggests valid moves to players. My enthusiasm for embedded development drives me to create practical, innovative solutions.
+                    I graduated with a Computer Science degree, focusing on projects that blend user interaction with cutting-edge technology. I’m looking for opportunities to bring my skills to a team that values groundbreaking, innovative solutions.
                 </p>
                 <p className={'mb-4'}>
-                    I’m looking for opportunities to bring my skills to a team that values groundbreaking work in embedded systems.
+                    Canadian Citizen and US Permanent Resident. No Sponsorship Required.
                 </p>
             </div>
         </section>

@@ -11,9 +11,9 @@ export default function Home() {
         <Header/>
         <main className={'pt-24 lg:w-1/2 lg:py-24'}>
             <About/>
-            <Experience/>
             {/*<Resume/>*/}
             <Projects/>
+            <Experience/>
         </main>
       </div>
     </div>
