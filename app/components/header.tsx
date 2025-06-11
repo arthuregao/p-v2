@@ -10,7 +10,7 @@ export default function Header() {
                     <a href="/">Arthur Gao</a>
                 </h1>
                 <h2 className={'mt-3 text-lg font-medium tracking-tight text-slate-200 sm:text-xl'}>
-                    New CS Graduate
+                    Turning code into campfire stories
                 </h2>
                 <p className={'mt-4 max-w-xs leading-normal'}>
                     I design innovative computing experiences!

@@ -57,7 +57,16 @@ export default function Experience() {
                 <ol className={'group/list'}>
                     <li className={'mb-12'}>
                         <ExperienceBox
-                            time={'Feb 2024 - Present'}
+                            time={'Sept 2024 - Present'}
+                            role={'Junior Computer Person'}
+                            company={'Pickford AI'}
+                            description={'Turning code into campfire stories'}
+                            link={'https://pickford.ai'}
+                        />
+                    </li>
+                    <li className={'mb-12'}>
+                        <ExperienceBox
+                            time={'Feb 2024 - Sept 2024'}
                             role={'Research Assistant'}
                             company={'University of Toronto'}
                             link={'https://www.law.utoronto.ca'}
@@ -81,15 +90,15 @@ export default function Experience() {
                             description={'Worked on the web team developing new features and performing bug fixes for all external and internal bank websites in an Agile development environment.'}
                         />
                     </li>
-                    {/*<li className={'mb-12'}>*/}
-                    {/*    <ExperienceBox*/}
-                    {/*        time={'2022 - 2024'}*/}
-                    {/*        role={'Director of Safety'}*/}
-                    {/*        company={'U of T Ski and Snowboard Club'}*/}
-                    {/*        description={'As Director of Safety for the University of Toronto Ski and Snowboard Club, I spearheaded an eight-member Crisis Management Response Team, ensuring readiness for challenges at large-scale ski events. My ability to think decisively under pressure was essential in rapidly implementing solutions to unforeseen trip complications, positively impacting the experience of over 1000 attendees.'}*/}
-                    {/*        link={'https://utssc.com'}*/}
-                    {/*    />*/}
-                    {/*</li>*/}
+                    <li className={'mb-12'}>
+                        <ExperienceBox
+                            time={'2022 - 2024'}
+                            role={'Director of Safety'}
+                            company={'U of T Ski and Snowboard Club'}
+                            description={'As Director of Safety for the University of Toronto Ski and Snowboard Club, I spearheaded an eight-member Crisis Management Response Team, ensuring readiness for challenges at large-scale ski events. My ability to think decisively under pressure was essential in rapidly implementing solutions to unforeseen trip complications, positively impacting the experience of over 1000 attendees.'}
+                            link={'https://utssc.com'}
+                        />
+                    </li>
                     <li className={'mb-12'}>
                         <ExperienceBox
                             time={'June - Sept 2021'}

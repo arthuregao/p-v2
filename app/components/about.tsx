@@ -10,7 +10,7 @@ export default function About() {
             </div>
             <div>
                 <p className={'mb-4'}>
-                    I graduated with a Computer Science degree, focusing on projects that blend user interaction with cutting-edge technology. I’m looking for opportunities to bring my skills to a team that values groundbreaking, innovative solutions.
+                    I graduated with a Computer Science degree, focusing on projects that blend user interaction with cutting-edge technology. I`m currently working in a role I love, contributing to a team that`s building innovative solutions.
                 </p>
                 <p className={'mb-4'}>
                     Canadian Citizen and US Permanent Resident. No Sponsorship Required.
