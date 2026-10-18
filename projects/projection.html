@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Projection Mapping — Arthur Gao</title>
+<meta name="description" content="A software project to lower the barrier of entry to animated storytelling. We developed an application that allows upper elementary and middle school aged students access to animation and projection mapping as a medium for storytelling. This project is being developed for test runs in Toronto classrooms." />
+<meta name="theme-color" content="#ff5f00" />
+<link rel="icon" href="../favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" />
+<link rel="stylesheet" href="../styles.css" />
+<script src="../index.js" defer></script>
+</head>
+<body class="reading">
+<a class="skip" href="#article">Skip to article</a>
+
+<header class="bar wrap grid label">
+  <a class="bar__id" href="../index.html">Arthur Gao<span class="long"> / Index</span></a>
+  <span class="bar__role">Project 05 of 06</span>
+  <nav aria-label="Primary">
+    <ul class="bar__nav">
+      <li><a href="../index.html#experience">Experience<sup>06</sup></a></li>
+      <li><a href="../index.html#projects">Projects<sup>06</sup></a></li>
+      <li><a href="../index.html#film">Film</a></li>
+      <li><a href="../index.html#about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="p-head wrap grid">
+    <div class="p-crumb label">
+      <a href="../index.html#projects">← Index</a>
+      <span>05 / 06</span>
+    </div>
+    <h1 class="p-title">Projection Mapping</h1>
+    <p class="p-deck">Projection Mapping Project: Transforming Education and Storytelling in K-12 Classrooms</p>
+  </section>
+
+  <section class="p-meta wrap grid" aria-label="Project details">
+    <dl>
+      <div class="m"><dt>Summary</dt><dd class="m-sum">A software project to lower the barrier of entry to animated storytelling. We developed an application that allows upper elementary and middle school aged students access to animation and projection mapping as a medium for storytelling. This project is being developed for test runs in Toronto classrooms.</dd></div>
+      <div class="m"><dt>Context</dt><dd>CSC490 — University of Toronto</dd></div>
+      <div class="m"><dt>Discipline</dt><dd>Web / Animation / Education</dd></div>
+      <div class="m"><dt>Team</dt><dd>Arthur Gao, David Zhou, Samira Dang, Rumaisa Chowdhury</dd></div>
+    </dl>
+  </section>
+
+  <!-- Reading surface: the article sits on paper; orange returns for the closing band. -->
+  <div class="paper">
+
+  <figure class="p-hero">
+    <img src="../images/projection.jpg" alt="Projection Mapping demo" width="1600" height="1200" />
+  </figure>
+
+
+  <div class="p-body wrap grid">
+    <aside class="p-aside label" aria-label="Contents">
+      <div class="stick">
+        <span>Contents (01)</span>
+        <ol>
+          <li><a href="#project-overview"><span>01</span> Project Overview</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <article class="prose" id="article">
+      <h2 id="project-overview">Project Overview</h2>
+      <p>The Projection Mapping Project was developed for CSC490—a capstone project course at the University of Toronto. Our class was given the objective to create an experience that could be used in K-12 classrooms, enabling new mediums for education and storytelling.</p>
+
+      <figure class="video wide">
+        <div class="video-frame">
+          <iframe src="https://www.youtube.com/embed/71GhNPpc5WA" title="YouTube video player" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <figcaption>Fig. 01 — Watch the Project in Action</figcaption>
+      </figure>
+
+      <p>After a few brainstorming sessions, I proposed the idea of bringing the technology of projection mapping into the classroom. Many of us shared the experience of creating shoebox dioramas in school, and we envisioned using projection mapping to transform these dioramas into dynamic storytelling tools instead of static displays.</p>
+      <p>Inspired by our professors’ work on animatronics and making technology accessible to primary and secondary school classrooms, we aimed to create a versatile tool that could be used across various subjects. The potential audience for such software would be vast, as it could integrate key curriculum requirements from multiple disciplines. For instance, a diorama depicting a natural landscape could require knowledge of biology, cultural heritage, and language arts, allowing students to craft a compelling script and story for the environment.</p>
+
+      <h3>Software Development</h3>
+      <p>Our projection mapping software integrates multiple open-source projects into one cohesive web studio. It enables users to create characters, upload audio recordings for animation, add image backgrounds, and manipulate characters and objects through keyframes. For example, users can animate the setting sun and the rising moon to represent the passage of time in a story.</p>
+      <p>Considering the prevalence of Chromebooks in the current educational landscape, we decided to develop the project as a web application to maximize accessibility. The backend is powered by a small Python Flask server that manages the storage and serving of uploaded assets. The frontend is built with React and Next.js (Page Router). We integrated Ready Player Me for 3D avatar creation, Theatre.js for animation, Three.js and React 3 Fiber for importing and animating 3D objects, and Rhubarb Lip Sync on the backend to generate mouth maps for characters based on their audio scripts.</p>
+
+      <h3>Features</h3>
+      <p>By combining these existing technologies with an asset manager, we created a cohesive experience that allows users to create their own stories. Simple animations can be made in as little as five minutes, making the tool both powerful and user-friendly. Elementary and middle school teachers have shown significant interest in the technology, as it empowers students’ creativity, enabling them to bring their imaginations to life.</p>
+
+      <h3>Conclusion</h3>
+      <p>In summary, the Projection Mapping Project was a valuable learning experience in integrating multiple technologies to create an educational tool. By making complex animation and storytelling accessible to young students, we hope to inspire creativity and enhance learning in K-12 classrooms.</p>
+
+      <h3>Acknowledgements</h3>
+      <p>This project was created my myself and teammates David Zhou, Samira Dang, Rumaisa Chowdhury. We would like to thank Professor Paul Dietz and our TA Sarah Kushner for their guidance and support during the course of this project.</p>
+    </article>
+  </div>
+
+  </div>
+
+  <section class="sect p-next" aria-labelledby="more-h">
+    <div class="sect__head wrap grid">
+      <h2 class="sect__title" id="more-h">Index<sup>(06)</sup></h2>
+      <span class="sect__count label">Projects</span>
+    </div>
+    <ol class="rows">
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">01</span>
+            <h3 class="row__title"><a href="whispers.html">Whispers</a> <span class="row__aff label">(Interactive / AI / Story)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="whispers.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">02</span>
+            <h3 class="row__title"><a href="bigband.html">Big Band</a> <span class="row__aff label">(Agents / Merge Orchestration)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="bigband.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">03</span>
+            <h3 class="row__title"><a href="shengji.html">Shengji AI</a> <span class="row__aff label">(Rust / PyTorch / Self-play)</span></h3>
+            <span class="row__when label">Side project</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="shengji.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">04</span>
+            <h3 class="row__title"><a href="chess.html">Embedded Chess</a> <span class="row__aff label">(Embedded / Rust / PCB)</span></h3>
+            <span class="row__when label">CSC385</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="chess.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">05</span>
+            <h3 class="row__title"><a href="#top" aria-current="page">Projection Mapping</a> <span class="row__aff label">(Web / Animation / Education)</span></h3>
+            <span class="row__when label">CSC490</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <p class="label">You are here.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">06</span>
+            <h3 class="row__title"><a href="parsing.html">GPT Parsing</a> <span class="row__aff label">(Data / GPT-4 / Research)</span></h3>
+            <span class="row__when label">SCOTUS data</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="parsing.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+    </ol>
+  </section>
+</main>
+
+<footer class="foot wrap grid">
+  <p class="foot__big"><a href="../index.html">Arthur Gao</a></p>
+  <span class="foot__l label">Turning code into campfire stories</span>
+  <nav class="foot__soc label soc" aria-label="Elsewhere"><a href="https://www.linkedin.com/in/-arthurgao-/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://x.com/arthuregao" target="_blank" rel="noopener">X <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://www.instagram.com/arthurgaounofficial/" target="_blank" rel="noopener">Instagram <span aria-hidden="true">↗</span></a></nav>
+  <span class="foot__r label"><a href="#top">Back to top ↑</a></span>
+</footer>
+</body>
+</html>

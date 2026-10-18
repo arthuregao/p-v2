@@ -1,0 +1,717 @@
+/* Index — Arthur Gao.
+   One flat field, one ink. Typography is the image.
+
+   SCALE (the only sizes on the site)
+     --t-display  name, project title       ALL CAPS, 800, edge to edge
+     --t-section  section titles            ALL CAPS, 800
+     --t-lead     hero tagline, page deck   800, tight
+     --t-entry    every list entry (experience AND projects), prose h2, about
+     --t-body     paragraphs
+     --t-meta     mono labels, numbers, dates, captions (uppercase)
+
+   RULES
+     A 2px ink rule opens a section. Nothing else gets a border,
+     except the desktop hover card, which is a field slip ruled in ink.
+     Hover / focus / open = hard-cut invert (ink band, field text).
+     Superscript counts never touch the line box (line-height 0, nudged up).
+
+   FIELDS (?field=orange|pink|magenta|lilac|green; persisted in localStorage)
+     orange   neon, the default. --orange token:
+              P3 screens: color(display-p3 1 0.35 0)  / ink #0b0b0b   6.5:1
+              sRGB:       #ff5f00                      / ink #0b0b0b   6.5:1
+     pink     #ff4fa3 / ink #0b0b0b   6.5:1
+     magenta  #d6007a / ink #ffffff   5.1:1
+     lilac    #cdb8ff / ink #8a0010   5.7:1
+     green    #1e3a2b / ink #efe8d8   10.2:1
+   Every pairing passes WCAG AA for body text in both directions (inverted bands too).
+
+   GALLERY (film/<slug>.html, body.gallery): darkroom black #0b0b0b, ink #efe8d8
+     (16:1), --orange as a small accent only (frame numbers; 6.5:1 on black).
+     The page enters on the orange field and fades to black in ~700ms (CSS only,
+     so no-JS still ends black; reduced motion starts black).
+     body.gallery.gallery--light swaps black for white (#ffffff, ink #0b0b0b). */
+
+:root {
+  --orange: #ff5f00;              /* neon orange, sRGB fallback */
+  --field: var(--orange);
+  --ink: #0b0b0b;
+  --rule: 2px solid var(--ink);
+  --hair: 1px solid var(--ink);   /* data tables only */
+  --gutter: clamp(16px, 2.4vw, 40px);
+  --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+
+  --t-display: clamp(4rem, 24.5vw, 30rem);
+  --t-section: clamp(2.25rem, 7.5vw, 8rem);
+  --t-lead:    clamp(1.75rem, 0.9rem + 3.4vw, 4.25rem);
+  --t-entry:   clamp(1.5rem, 1rem + 2vw, 2.75rem);
+  --t-body:    1.125rem;
+  --t-meta:    0.8125rem;
+
+  --air: clamp(56px, 9vw, 160px);
+  color-scheme: light;
+}
+/* Wide-gamut screens get the real neon: outside sRGB, same 6.5:1 against the ink. */
+@supports (color: color(display-p3 1 1 1)) {
+  :root { --orange: color(display-p3 1 0.35 0); }
+}
+html[data-field="orange"]  { --field: var(--orange); --ink: #0b0b0b; }
+html[data-field="pink"]    { --field: #ff4fa3; --ink: #0b0b0b; }
+html[data-field="magenta"] { --field: #d6007a; --ink: #ffffff; color-scheme: dark; }
+html[data-field="lilac"]   { --field: #cdb8ff; --ink: #8a0010; }
+html[data-field="green"]   { --field: #1e3a2b; --ink: #efe8d8; color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--field);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+img, svg { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 0.18em; }
+::selection { background: var(--ink); color: var(--field); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: var(--gutter); top: 8px; background: var(--ink); color: var(--field); padding: 6px 10px; z-index: 50; }
+
+.label, .mono {
+  font-family: var(--mono);
+  font-size: var(--t-meta);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+.label { text-transform: uppercase; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Grid ---------- */
+.wrap { padding-inline: var(--gutter); }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+}
+
+/* ---------- Top bar ---------- */
+/* One baseline: every item shares the label line-height, and the superscript
+   counts are lifted with position (line-height 0), so they never grow a line box. */
+.bar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; gap: var(--gutter); align-items: baseline;
+  background: var(--field);
+  padding-block: 12px;
+  line-height: 1.35;
+}
+.bar a { text-decoration: none; }
+.bar a:hover { text-decoration: underline; }
+.bar__id { flex: 0 0 auto; font-weight: 700; }
+.bar__role { flex: 1 1 auto; min-width: 0; }
+.bar nav { flex: 0 0 auto; margin-left: auto; }
+.bar__nav { margin: 0; padding: 0; list-style: none; display: flex; align-items: baseline; gap: 1.5em; }
+.bar__nav li { line-height: inherit; }
+.bar__nav sup { font-size: 0.75em; line-height: 0; vertical-align: baseline; position: relative; top: -0.6em; margin-left: 2px; }
+
+/* ---------- Big type ---------- */
+.hero__name, .p-title, .sect__title, .foot__big {
+  margin: 0;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.055em;
+  line-height: 0.82;
+}
+.hero__name, .p-title { margin-left: -0.04em; }
+
+/* ---------- Hero ---------- */
+.hero { padding-block: clamp(12px, 3vw, 48px) var(--air); container-type: inline-size; }
+.hero__name { grid-column: 1 / -1; font-size: var(--t-display); }
+/* "ARTHUR GAO" on one line, edge to edge; 6.19em measured at weight 800, -0.035em tracking. */
+@supports (width: 1cqi) { .hero__name { font-size: calc(100cqi / var(--name-em, 6.22)); } }
+.hero__name { letter-spacing: -0.035em; white-space: nowrap; }
+.hero__meta { grid-column: 1 / span 3; margin: clamp(24px, 3.5vw, 56px) 0 0; }
+.hero__copy { grid-column: 1 / -1; margin-top: clamp(20px, 3vw, 44px); }
+.hero__tag {
+  margin: 0;
+  font-weight: 800; font-size: var(--t-lead);
+  line-height: 0.98; letter-spacing: -0.04em;
+  max-width: 16ch;
+}
+.hero__blurb { margin: 1.1em 0 0; font-weight: 700; }
+
+/* ---------- Sections ---------- */
+.sect { padding-bottom: var(--air); }
+.sect__head {
+  border-top: var(--rule);
+  padding-block: clamp(14px, 1.6vw, 24px) clamp(24px, 3vw, 48px);
+  align-items: end;
+}
+.sect__title { grid-column: 1 / span 10; font-size: var(--t-section); }
+.sect__title sup {
+  font-family: var(--mono); font-weight: 400; font-size: var(--t-meta);
+  letter-spacing: 0.02em; vertical-align: top; margin-left: 0.6em; position: relative; top: 0.4em;
+}
+.sect__count { grid-column: 11 / -1; text-align: right; }
+
+/* ---------- Lineup rows (experience + projects + p-next: one component) ---------- */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { position: relative; }
+.row__head {
+  position: relative;
+  padding-block: clamp(8px, 0.9vw, 14px);
+  align-items: baseline;
+}
+.row__no { grid-column: 1 / span 1; }
+.row__title {
+  grid-column: 2 / span 8;
+  margin: 0;
+  font-weight: 800; font-size: var(--t-entry);
+  line-height: 1.02; letter-spacing: -0.035em;
+}
+.row__title a { text-decoration: none; position: relative; z-index: 2; }
+.row__title a:hover { text-decoration: underline; text-decoration-thickness: 0.07em; }
+.row__aff { white-space: nowrap; margin-left: 0.5em; letter-spacing: 0.02em; }
+.row__when { grid-column: 10 / -1; text-align: right; }
+
+.row__head:hover,
+.row__head:has(:focus-visible),
+.row.is-open .row__head {
+  background: var(--ink);
+  color: var(--field);
+  box-shadow: 0 0 0 var(--gutter) var(--ink);
+  clip-path: inset(0 calc(-1 * var(--gutter)));
+}
+
+.row__head :focus-visible { outline-color: var(--field); outline-offset: -4px; }
+
+/* Detail: visible by default (no-JS); JS collapses it behind a toggle. */
+.row__detail { padding-block: 14px 32px; }
+.row__text { grid-column: 2 / span 7; max-width: 60ch; }
+.row__text p { margin: 0 0 0.9rem; }
+.row__go {
+  font-family: var(--mono); font-size: var(--t-meta); text-transform: uppercase; letter-spacing: 0.02em;
+  text-decoration: underline;
+}
+.row__go:hover { background: var(--ink); color: var(--field); text-decoration: none; }
+
+.row__toggle {
+  position: absolute; inset: 0; width: 100%; z-index: 1;
+  background: none; border: 0; padding: 0 var(--gutter) 0 0; margin: 0; cursor: pointer; color: inherit;
+  display: flex; justify-content: flex-end; align-items: center;
+  font: 800 1.75rem/1 var(--sans);
+}
+.row__toggle span[aria-hidden] { width: 1em; text-align: right; }
+.js .row__head { padding-right: calc(var(--gutter) + 1.75em); }
+.js .row__detail { display: none; }
+.js .row.is-open .row__detail { display: grid; }
+
+/* Desktop (hover: hover, fine pointer, wider than 720px): index.js sets html.hover-rows.
+   Rows stay collapsed; hovering inverts the row and a field slip trails the cursor with
+   the row's description. Project rows (.row--link) open their page on click; experience
+   rows have no page, so a click still expands them in place. The +/- glyph is hidden
+   (it returns on keyboard focus or when a row is open). Touch / narrow keeps +/-. */
+.hover-rows .row__head { padding-right: var(--gutter); }
+.hover-rows .row.is-open .row__head { padding-right: calc(var(--gutter) + 1.75em); }
+.hover-rows .row__toggle span[aria-hidden] { visibility: hidden; }
+.hover-rows .row__toggle:focus-visible span[aria-hidden],
+.hover-rows .row.is-open .row__toggle span[aria-hidden] { visibility: visible; }
+.hover-rows .row--link .row__toggle { display: none; }
+.hover-rows .row--link .row__head { cursor: pointer; }
+
+.hovercard {
+  position: fixed; left: 0; top: 0; z-index: 30;
+  width: min(380px, 36vw);
+  padding: 12px 16px 16px;
+  background: var(--field); color: var(--ink);
+  border: var(--rule);
+  pointer-events: none;
+  visibility: hidden;
+  translate: var(--x, 0px) var(--y, 0px);
+  will-change: translate;
+}
+.hovercard.is-on { visibility: visible; }
+.hovercard__meta { display: flex; justify-content: space-between; gap: 1em; }
+.hovercard__title { margin: 10px 0 8px; font-weight: 800; font-size: 1.375rem; line-height: 1.1; letter-spacing: -0.02em; }
+.hovercard__text { margin: 0 0 12px; }
+.hovercard__go { margin: 0; }
+
+/* ---------- About ---------- */
+.about__body { grid-column: 2 / span 9; }
+.about__lead {
+  margin: 0 0 1.5rem;
+  font-weight: 700; font-size: var(--t-entry);
+  line-height: 1.12; letter-spacing: -0.03em;
+  max-width: 34ch;
+}
+.about__note { margin: 0; }
+
+/* ---------- Film: the ink band (invert of the field) ---------- */
+.film { background: var(--ink); color: var(--field); --rule: 2px solid var(--field); padding-top: clamp(14px, 1.6vw, 24px); }
+.film .sect__head { border-top: 0; }
+.film ::selection { background: var(--field); color: var(--ink); }
+.film__sheet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.4vw, 40px) var(--gutter);
+}
+.frame { margin: 0; }
+.frame__img, .frame img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--field) 16%, var(--ink));
+  display: grid; place-items: end start;
+  padding: 10px;
+}
+.frame figcaption { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; }
+
+/* ---------- Footer ---------- */
+.foot { padding-block: 0 20px; }
+.foot__big { grid-column: 1 / -1; font-size: var(--t-section); margin-bottom: 24px; }
+.foot__l { grid-column: 1 / span 4; }
+.foot__soc { grid-column: 5 / span 5; }
+.foot__r { grid-column: 10 / -1; text-align: right; }
+
+/* Socials: mono text links, no icons. Footer of every page + the homepage About. */
+.soc a { text-decoration: none; white-space: nowrap; }
+.soc a:hover { background: var(--ink); color: var(--field); }
+.about__soc { margin: 1.25rem 0 0; }
+
+/* ---------- Project page ---------- */
+.p-head { padding-block: clamp(12px, 3vw, 48px) var(--air); }
+.p-crumb { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1em; margin-bottom: clamp(28px, 5vw, 80px); }
+.p-title { grid-column: 1 / -1; font-size: clamp(3rem, 13vw, 16rem); overflow-wrap: break-word; hyphens: manual; }
+.p-deck {
+  grid-column: 4 / -1; margin: clamp(24px, 3.5vw, 56px) 0 0;
+  font-weight: 800; font-size: var(--t-lead); line-height: 1; letter-spacing: -0.04em;
+  max-width: 22ch;
+}
+
+/* Metadata reads like a poster's opening-hours table: mono key, plain value, no lines. */
+.p-meta { padding-bottom: var(--air); }
+.p-meta dl { grid-column: 1 / -1; margin: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: 10px; border-top: var(--rule); padding-top: clamp(14px, 1.6vw, 24px); }
+.p-meta .m { display: contents; }
+.p-meta dt, .p-meta dd { margin: 0; }
+.p-meta dt { grid-column: 1 / span 3; font-family: var(--mono); font-size: var(--t-meta); text-transform: uppercase; letter-spacing: 0.02em; padding-top: 0.3em; }
+.p-meta dd { grid-column: 4 / span 7; font-weight: 700; }
+.p-meta dd.m-sum { font-weight: 400; max-width: 60ch; }
+
+/* Full-bleed figure (Big Band diagram) */
+.p-hero { margin: 0 0 var(--air); }
+.p-hero figcaption, .prose figcaption { font-family: var(--mono); font-size: var(--t-meta); line-height: 1.4; padding-top: 10px; }
+.p-hero figcaption { padding-inline: var(--gutter); }
+
+/* Typographic band (replaces a picture slot): ink field, field type. */
+.p-band { background: var(--ink); color: var(--field); padding-block: clamp(32px, 6vw, 96px); margin-bottom: var(--air); align-items: end; }
+.p-band ::selection { background: var(--field); color: var(--ink); }
+.p-band__big {
+  grid-column: 1 / span 9; margin: 0;
+  font-weight: 800; font-size: var(--t-section); text-transform: uppercase;
+  line-height: 0.82; letter-spacing: -0.055em; margin-left: -0.04em;
+}
+.p-band__big span { display: block; }
+.p-band__meta { grid-column: 10 / -1; margin: 0; }
+
+.p-body { padding-bottom: var(--air); counter-reset: sec; }
+.p-aside { grid-column: 1 / span 3; }
+.p-aside .stick { position: sticky; top: 72px; }
+.p-aside ol { list-style: none; margin: 14px 0 0; padding: 0; }
+.p-aside a { display: flex; gap: 0.9em; padding: 4px 0; text-decoration: none; }
+.p-aside a:hover { background: var(--ink); color: var(--field); box-shadow: 0 0 0 4px var(--ink); }
+
+.prose { grid-column: 4 / span 7; max-width: 66ch; line-height: 1.6; }
+.prose p, .prose ul, .prose ol { margin: 0 0 1.1em; }
+.prose h2 {
+  counter-increment: sec;
+  margin: 2.4em 0 0.7em; padding-top: 14px; border-top: var(--rule);
+  font-weight: 800; font-size: var(--t-entry); line-height: 1.02; letter-spacing: -0.035em;
+}
+.prose h2::before {
+  content: counter(sec, decimal-leading-zero);
+  display: block; margin-bottom: 1.1em;
+  font-family: var(--mono); font-weight: 400; font-size: var(--t-meta); letter-spacing: 0.02em;
+}
+.prose h2:first-child { margin-top: 0; }
+.prose h3 { margin: 1.8em 0 0.4em; font-weight: 800; font-size: 1.375rem; line-height: 1.1; letter-spacing: -0.02em; }
+.prose h4 { margin: 1.8em 0 0.4em; font-family: var(--mono); font-weight: 700; font-size: var(--t-meta); text-transform: uppercase; letter-spacing: 0.04em; }
+.prose figure { margin: 2.2em 0; }
+.prose code { font-family: var(--mono); font-size: 0.88em; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; background: var(--ink); }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+@media (min-width: 1100px) {
+  .prose figure.wide { margin-right: calc(-1 * (100% / 7 * 2)); }
+}
+
+/* Data tables: the only hairlines on the site, because data needs them. */
+.prose table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; margin: 1.5em 0; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 7px 10px 7px 0; border-bottom: var(--hair); }
+.prose th { font-family: var(--mono); font-size: var(--t-meta); text-transform: uppercase; font-weight: 400; letter-spacing: 0.02em; border-bottom: var(--rule); }
+.prose td.n, .prose th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.table-scroll { overflow-x: auto; }
+.prose pre { font-family: var(--mono); font-size: var(--t-meta); line-height: 1.55; background: var(--ink); color: var(--field); padding: 14px 16px; margin: 1.5em 0; overflow-x: auto; }
+.prose pre code { font-size: inherit; }
+.prose blockquote { margin: 1.5em 0; padding-left: 1em; border-left: var(--rule); font-family: var(--mono); font-size: 0.9375rem; }
+.prose ol, .prose ul { padding-left: 1.4em; }
+.prose li { margin-bottom: 0.5em; }
+
+/* Inline SVG diagrams draw in the current ink. */
+.diagram, .loop svg, .pipeline svg { color: var(--ink); }
+.diagram text, .loop svg text { font-family: var(--mono); fill: currentColor; }
+.diagram .t-big { font-family: var(--sans); font-weight: 800; }
+.loop svg text { font-size: 12px; }
+.loop svg .t-b { font-weight: 700; }
+.on-ink { fill: var(--field) !important; }
+
+/* Typographic bar chart */
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-family: var(--mono); font-size: var(--t-meta); text-transform: uppercase; letter-spacing: 0.02em; }
+.bars li { display: grid; grid-template-columns: 11.5em 1fr 4em; gap: 12px; align-items: center; }
+.bars i { display: block; height: 1.5em; width: calc(var(--v) / 31.3 * 100%); background: var(--ink); }
+.bars b { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+
+
+section[id], [id="index"] { scroll-margin-top: 48px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .bar__role { display: none; }
+  .hero__meta, .hero__copy { grid-column: 1 / -1; }
+  .hero__copy { margin-top: 20px; }
+  .sect__title { grid-column: 1 / -1; }
+  .sect__count { grid-column: 1 / -1; text-align: left; margin-top: 12px; }
+  .row__no { grid-column: 1 / span 2; order: 1; }
+  .row__when { grid-column: 3 / -1; order: 1; }
+  .row__title { grid-column: 1 / -1; order: 2; margin-top: 2px; }
+  .row__aff { white-space: normal; display: inline-block; vertical-align: baseline; margin-left: 0; }
+  .js .row__toggle { align-items: flex-start; padding-top: clamp(8px, 0.9vw, 14px); }
+  .row__text, .about__body { grid-column: 1 / -1; }
+  .film__sheet { grid-template-columns: 1fr 1fr; }
+  .foot__l, .foot__soc, .foot__r { grid-column: 1 / -1; text-align: left; }
+  .foot__soc, .foot__r { margin-top: 8px; }
+  .p-deck { grid-column: 1 / -1; }
+  .p-meta dt { grid-column: 1 / span 4; }
+  .p-meta dd { grid-column: 5 / -1; }
+  .p-band__big, .p-band__meta { grid-column: 1 / -1; }
+  .p-band__meta { margin-top: 20px; }
+  .p-aside { display: none; }
+  .prose { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .bar { font-size: 0.75rem; gap: 12px; }
+  .bar__id .long, .bar__nav sup { display: none; }
+  .bar__nav { gap: 1em; }
+  .p-meta dt, .p-meta dd { grid-column: 1 / -1; }
+  .p-meta dd { margin-bottom: 8px; }
+  .bars li { grid-template-columns: 6.5em 1fr 3.5em; gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+  body { background: #fff; }
+  .bar { position: static; }
+  .js .row__detail { display: grid; }
+  .row__toggle, .hovercard { display: none; }
+}
+
+/* Project photos (project pages only; no hover previews) */
+.p-hero img { display: block; width: 100%; max-height: 82vh; object-fit: cover; }
+.prose figure img { display: block; width: 100%; height: auto; }
+
+/* ---------- Film: homepage strip, film index, collection pages ---------- */
+.frame img { padding: 0; height: auto; }
+.frame figcaption { display: grid; grid-template-columns: 3ch 1fr; column-gap: 1em; row-gap: 2px; }
+.frame figcaption span:nth-child(n+2) { grid-column: 2; }
+.film .sect__title a { text-decoration: none; }
+.film .sect__title a:hover { text-decoration: underline; text-decoration-thickness: 0.06em; }
+.film__intro { padding-bottom: clamp(24px, 3vw, 48px); }
+.film__intro p { grid-column: 2 / span 7; max-width: 60ch; margin: 0; font-weight: 700; }
+.p-intro { grid-column: 4 / span 7; max-width: 60ch; margin-top: 1.4em; }
+.p-intro p { margin: 0 0 0.9rem; }
+.p-intro p:first-child { font-weight: 700; }
+@media (max-width: 900px) { .film__intro p, .p-intro { grid-column: 1 / -1; } }
+.film__more { margin: clamp(24px, 3vw, 48px) 0 0; }
+.film__more a:hover, .p-next .sect__count a:hover { background: var(--field); color: var(--ink); text-decoration: none; }
+.p-next .sect__count a:hover { background: var(--ink); color: var(--field); }
+
+/* Film index: lineup rows, each with an inline cover (no JS needed). */
+.coll__cover { padding-block: 6px clamp(28px, 4vw, 64px); }
+.coll__cover a { grid-column: 2 / span 6; display: block; }
+.coll__cover img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--ink); }
+.coll:has(.row__head:hover) .coll__cover img { outline: 2px solid var(--ink); outline-offset: 0; }
+
+/* Collection page: one photograph per row, an occasional pair of verticals. */
+.seq { list-style: none; margin: 0; padding: 0 0 var(--air); display: grid; gap: clamp(48px, 8vw, 128px); }
+.seq > li { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+.shot { margin: 0; }
+.shot img { width: 100%; height: auto; background: var(--ink); }
+.shot figcaption { padding-top: 10px; }
+.seq__one .shot { grid-column: 1 / -1; }
+.seq__one.is-portrait .shot { grid-column: 4 / span 6; }
+.seq__pair .shot:first-child { grid-column: 1 / span 6; }
+.seq__pair .shot:last-child { grid-column: 7 / span 6; }
+@media (min-width: 901px) {
+  .seq__one:not(.is-portrait) .shot img { max-height: 88vh; object-fit: contain; object-position: left top; background: none; }
+}
+@media (max-width: 900px) {
+  .coll__cover a { grid-column: 1 / -1; }
+  .seq__one.is-portrait .shot { grid-column: 2 / span 10; }
+}
+@media (max-width: 560px) {
+  .seq__one.is-portrait .shot,
+  .seq__pair .shot:first-child, .seq__pair .shot:last-child { grid-column: 1 / -1; }
+  .seq__pair { row-gap: clamp(48px, 8vw, 128px); }
+}
+/* Rows without a detail panel get no toggle, so no space reserved for one. */
+.js .row__head:not(:has(.row__toggle)) { padding-right: var(--gutter); }
+
+/* ---------- Gallery: collection pages on darkroom black ----------
+   body.gallery remaps the two tokens, so every component (bar, rules, rows, footer)
+   follows. Entry: --field fades from the orange to black over 700ms. --ink is
+   registered as a colour but jumps from black to cream at 24%, the moment both inks
+   read about 4:1 against the darkening field, so text never drops below that.
+   The orange accent waits (in ink) until 70%, when the field is dark enough for it.
+   CSS only: no-JS ends black; reduced motion skips the animation (starts black). */
+@property --field { syntax: "<color>"; inherits: true; initial-value: #ff5f00; }
+@property --ink   { syntax: "<color>"; inherits: true; initial-value: #0b0b0b; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #0b0b0b; }
+body.gallery {
+  --field: #0b0b0b; --ink: #efe8d8; --accent: var(--orange);
+  --rule: 2px solid var(--ink); --hair: 1px solid var(--ink);   /* re-resolve against the gallery ink */
+  color-scheme: dark;
+  animation: gallery-in 700ms linear both;
+}
+@keyframes gallery-in {
+  0%     { --field: var(--orange); --ink: #0b0b0b; --accent: #0b0b0b; }
+  24%    { --ink: #0b0b0b; --accent: #0b0b0b; }
+  24.01% { --ink: #efe8d8; --accent: #efe8d8; }
+  70%    { --accent: #efe8d8; }
+  70.01% { --accent: var(--orange); }
+  100%   { --field: #0b0b0b; --ink: #efe8d8; --accent: var(--orange); }
+}
+.gallery .shot figcaption, .gallery .p-crumb span { color: var(--accent); }
+.gallery .shot img { background: #1a1a1a; }
+@media (min-width: 901px) { .gallery .seq__one:not(.is-portrait) .shot img { background: none; } }
+
+/* White option: <body class="gallery gallery--light">. Black ink stays legible on the
+   orange as it fades, so the ink never switches. */
+body.gallery.gallery--light { --field: #ffffff; --ink: #0b0b0b; --accent: #0b0b0b; color-scheme: light; animation-name: gallery-in-light; }
+@keyframes gallery-in-light {
+  0%   { --field: var(--orange); }
+  100% { --field: #ffffff; }
+}
+.gallery--light .shot img { background: #eeeeee; }
+
+/* ---------- Reading surface: project pages (body.reading > .paper) ----------
+   Arthur: long text on neon hurts. The orange stays a header band (bar, title,
+   deck, meta) and a closing band (p-next, footer); the article in between sits on
+   paper, cut in with a hard horizontal edge.
+     paper #f4f0e8 / ink #141210         16.4:1
+     neon orange as a FILL only, under ink text (#141210 on #ff5f00 6.1:1): section
+     numbers, link hover, TOC active, diagram accents. Never orange text on paper
+     (2.7:1, fails).  Measure <= 68ch, 1.1875rem / 1.6. */
+.paper {
+  --field: #f4f0e8; --ink: #141210;
+  --rule: 2px solid var(--ink); --hair: 1px solid var(--ink);
+  background: var(--field); color: var(--ink);
+  padding-top: var(--air);
+  display: flow-root;
+}
+.paper ::selection { background: var(--orange); color: #141210; }
+.paper .prose { font-size: 1.1875rem; line-height: 1.6; max-width: 68ch; }
+.paper .prose h2::before {
+  display: table;   /* shrink-wrapped block: a small orange tag */
+  background: var(--orange); color: #141210; padding: 2px 6px;
+}
+.paper .prose a { text-decoration-thickness: 1px; }
+.paper .prose a:hover,
+.paper .p-aside a:hover,
+.paper .p-aside a.is-active { background: var(--orange); color: #141210; box-shadow: 0 0 0 3px var(--orange); text-decoration: none; }
+.paper .p-aside a.is-active { font-weight: 700; }
+.paper .p-band { color: var(--orange); }          /* poster band: orange on ink, 6.1:1 */
+.paper .p-band ::selection { background: var(--orange); color: var(--ink); }
+.diagram .accent-fill { fill: var(--orange); }
+
+/* Wide diagrams scroll inside their own frame on small screens (never the page). */
+@media (max-width: 720px) {
+  .diagram-scroll { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .diagram-scroll svg { width: 680px; max-width: none; }
+}
+
+/* =====================================================================
+   MOTION — poster, not SaaS. Hard cuts, physical weight, short springs.
+   Everything here is gated on html.motion, which index.js adds only when
+   prefers-reduced-motion is not "reduce". No JS or reduced motion = the
+   static page above, fully visible. Only transform / opacity / clip-path
+   animate (plus the grid-rows expand, which is the one height change).
+
+   TIMINGS
+     page wipe        280ms   new page wipes up over the old (hard edge)
+     name stamp       ~600ms  ten letters, 40ms apart, 220ms each, once per session
+     press            instant 1.5px down, scale .995, snaps back on release
+     +/− toggle       200ms   half turn with overshoot
+     row expand       340ms   grid-rows 0fr -> 1fr, small spring
+     cursor card      lerp .18 per frame (one rAF loop, idle when settled), tilt +/-4deg from x velocity, 120ms snap
+     section title    420ms   slides up out of a clip-path mask
+     row stagger      260ms   35ms per row
+     shot lift        160ms   2px up with a soft shadow (desktop hover)
+   ===================================================================== */
+
+:root {
+  --ease-hard: cubic-bezier(0.7, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.25, 1.35, 0.5, 1);
+  --ease-land: cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+/* Cross-document page transition, site-wide: a quick hard wipe. The gallery
+   pages' orange -> black fade runs on the live new page underneath it. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: none; }
+  ::view-transition-new(root) { animation: vt-wipe 280ms var(--ease-hard) both; }
+}
+@keyframes vt-wipe {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+/* Name stamp-in (homepage). stamp-pending hides the name pre-paint; the
+   fail-safe shows it after 1.2s if the script never runs. */
+.stamp-pending .hero__name { visibility: hidden; animation: stamp-failsafe 0s 1.2s forwards; }
+@keyframes stamp-failsafe { to { visibility: visible; } }
+.stamp .hero__name { visibility: visible; animation: none; }
+.stamp .stamp__l { display: inline-block; animation: stamp-in 220ms var(--ease-land) both; animation-delay: calc(var(--i) * 40ms); }
+@keyframes stamp-in {
+  0%   { opacity: 0; transform: translateY(-0.09em) scale(1.06); }
+  1%   { opacity: 1; }
+  65%  { transform: translateY(0.015em) scale(0.985); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Press: rows and links depress; the ink band itself never fades. */
+.motion .row__head:active { transform: translateY(1.5px) scale(0.995); }
+.motion :is(.bar a, .row__go, .soc a, .film__more a, .p-crumb a, .sect__count a, .foot__r a) { display: inline-block; }
+.motion :is(.bar a, .row__go, .soc a, .film__more a, .p-crumb a, .sect__count a, .foot__r a, .p-aside a):active { transform: translateY(1.5px) scale(0.98); }
+
+/* +/− turns half a revolution on toggle. */
+.motion .row__toggle span[aria-hidden] { display: inline-block; transition: transform 200ms var(--ease-spring); }
+.motion .row.is-open .row__toggle span[aria-hidden] { transform: rotate(180deg); }
+
+/* Expand in place with a short spring (grid-rows 0fr -> 1fr). Padding moves to
+   the children's margins so the collapsed row is truly 0px tall. */
+.motion .row__detail {
+  display: grid; padding-block: 0;
+  grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 340ms var(--ease-spring), visibility 0s linear 340ms;
+}
+.motion .row.is-open .row__detail { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 340ms var(--ease-spring), visibility 0s; }
+.motion .row__text { min-height: 0; overflow: hidden; }
+.motion .row__text > :first-child { margin-top: 14px; }
+.motion .row__text > :last-child { margin-bottom: 32px; }
+
+/* Cursor card: index.js drives translate (inertia) and rotate (tilt); CSS does the snap. */
+.motion .hovercard { scale: 0.9; transform-origin: 0 0; transition: scale 120ms var(--ease-spring), visibility 0s linear 120ms; will-change: translate, rotate, scale; }
+.motion .hovercard.is-on { scale: 1; transition: scale 120ms var(--ease-spring), visibility 0s; }
+
+/* Scroll reveals. index.js adds .rv-wait only to things below the fold at load,
+   then swaps it for .rv-in when they enter view. */
+.motion .sect__title.rv-wait, .motion .p-title.rv-wait { clip-path: inset(0 0 100% 0); }
+.motion .sect__title.rv-in, .motion .p-title.rv-in { animation: title-up 420ms var(--ease-hard) both; }
+@keyframes title-up {
+  from { clip-path: inset(-0.3em -0.3em 100% -0.3em); transform: translateY(0.45em); }
+  to   { clip-path: inset(-0.3em -0.3em -0.3em -0.3em); transform: none; }
+}
+.motion .rows.rv-wait > li { clip-path: inset(0 0 100% 0); }
+.motion .rows.rv-in > li { animation: row-in 260ms var(--ease-hard) both; animation-delay: calc(var(--i, 0) * 35ms); }
+@keyframes row-in {
+  from { clip-path: inset(0 0 100% 0); transform: translateY(10px); }
+  to   { clip-path: inset(0 0 -40px 0); transform: none; }
+}
+
+/* Photographs are never animated: they load and sit still. */
+
+@media print {
+  .motion .row__detail { grid-template-rows: 1fr; visibility: visible; }
+  .motion .rv-wait, .motion .rv-wait > li { clip-path: none; opacity: 1; }
+}
+
+/* ---------- Photographs: fully visible, edges defined ---------- */
+/* Collection pages: every photo fits the viewport whole, never cropped or taller than the screen. */
+.shot img {
+  display: block;
+  width: auto; height: auto;
+  max-width: 100%;
+  max-height: calc(100svh - 9rem);
+  object-fit: contain;
+  background: none;
+}
+.seq__one .shot, .seq__pair .shot { display: flex; flex-direction: column; align-items: flex-start; }
+/* Dark frames must not dissolve into the black: homepage strip gets a thin print border,
+   gallery photos get a faint hairline edge. */
+.film .frame img { border: 5px solid #efe8d8; box-sizing: border-box; }
+.gallery:not(.gallery--light) .shot img { outline: 1px solid rgb(239 232 216 / 0.22); outline-offset: 0; }
+/* Footer name links home on inner pages. */
+.foot__big a { color: inherit; text-decoration: none; }
+.foot__big a:hover, .foot__big a:focus-visible { text-decoration: underline; text-decoration-thickness: 0.06em; text-underline-offset: 0.08em; }
+
+/* ---------- Title case: bold lowercase, Cappellini-poster style (default). ?case=upper restores caps. ----------
+   Letters are tracked so tight they touch and lines nearly kiss; a very light outline on each
+   glyph (split into .gl spans by index.js) keeps overlaps readable. Without JS: same type, no outline. */
+html:not([data-case="upper"]) :is(.hero__name, .p-title, .sect__title, .foot__big, .p-band__big) {
+  text-transform: lowercase;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  -webkit-text-stroke: 0;
+}
+:is(.hero__name, .p-title, .sect__title, .foot__big, .p-band__big) :is(.gl, .stamp__l) {
+  -webkit-text-stroke: 0;
+}
+.gallery { --glyph-line: rgb(11 11 11 / 0.9); }          /* light ink on black: separate with black */
+.p-band { --glyph-line: rgb(11 11 11 / 0.9); }
+html:not([data-case="upper"]) .hero__name { --name-em: var(--name-em-lower, 4.45); }
+
+/* ---------- Supporting text: typewriter (Courier Prime), Cappellini-poster style ----------
+   Short supporting copy only: project and collection decks, film intro, About, row descriptions.
+   Long-form prose stays in Atkinson Next for readability. */
+:root { --type: "Courier Prime", "Courier New", ui-monospace, monospace; }
+:is(.p-deck, .p-intro p, .film__intro p, .about__lead, .row__text p) {
+  font-family: var(--type);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.p-deck, .about__lead { font-size: clamp(1.25rem, 0.9rem + 1.3vw, 2rem); line-height: 1.2; max-width: 34ch; }
+.p-intro p, .film__intro p { font-size: clamp(1.0625rem, 0.95rem + 0.4vw, 1.3125rem); line-height: 1.3; max-width: 52ch; }
+.row__text p { font-size: 1.0625rem; line-height: 1.35; }
+
+/* Glyph spans never inherit block layout from line spans. */
+:is(.hero__name, .p-title, .sect__title, .foot__big, .p-band__big) .gl { display: inline; }
+
+/* Registered mark on display type: small and raised, not display size. */
+.reg { font-size: 0.28em; line-height: 0; vertical-align: top; position: relative; top: 0.35em; margin-left: 0.04em; -webkit-text-stroke: 0; letter-spacing: 0; }
+
+/* ---------- Hover underlines draw in left to right ----------
+   Every hover-only underline is a background line that grows from 0 to 100% width.
+   Always-on underlines (prose links) are untouched. */
+:is(.bar a, .row__title a, .film .sect__title a, .foot__big a) {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% var(--ul, 2px);
+  transition: background-size 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:is(.bar a, .row__title a, .film .sect__title a, .foot__big a):is(:hover, :focus-visible) {
+  text-decoration: none;
+  background-size: 100% var(--ul, 2px);
+}
+.row__title a { --ul: 0.07em; }
+:is(.film .sect__title a, .foot__big a) { --ul: 0.06em; background-position: 0 96%; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.bar a, .row__title a, .film .sect__title a, .foot__big a) { transition: none; }
+}
