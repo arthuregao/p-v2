@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shengji AI — Arthur Gao</title>
+<meta name="description" content="A self-play AI for Shengji (Tractor), the four-player Chinese trick-taking game: a Rust engine, a PyTorch card transformer trained with Deep Monte-Carlo self-play, PIMC endgame search, and an Elo league with bootstrap confidence intervals" />
+<meta name="theme-color" content="#ff5f00" />
+<link rel="icon" href="../favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" />
+<link rel="stylesheet" href="../styles.css" />
+<script src="../index.js" defer></script>
+</head>
+<body class="reading">
+<a class="skip" href="#article">Skip to article</a>
+
+<header class="bar wrap grid label">
+  <a class="bar__id" href="../index.html">Arthur Gao<span class="long"> / Index</span></a>
+  <span class="bar__role">Project 03 of 06</span>
+  <nav aria-label="Primary">
+    <ul class="bar__nav">
+      <li><a href="../index.html#experience">Experience<sup>06</sup></a></li>
+      <li><a href="../index.html#projects">Projects<sup>06</sup></a></li>
+      <li><a href="../index.html#film">Film</a></li>
+      <li><a href="../index.html#about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="p-head wrap grid">
+    <div class="p-crumb label">
+      <a href="../index.html#projects">← Index</a>
+      <span>03 / 06</span>
+    </div>
+    <h1 class="p-title">Shengji AI</h1>
+    <p class="p-deck">Teaching a machine to play Tractor: self-play, a card transformer, and search under hidden information</p>
+  </section>
+
+  <section class="p-meta wrap grid" aria-label="Project details">
+    <dl>
+      <div class="m"><dt>Summary</dt><dd class="m-sum">A from-scratch Shengji (升级 / Tractor) engine in Rust and an AI that learns to play it through self-play. A small transformer over cards, trained with Deep Monte-Carlo in PyTorch, beats my hand-written heuristic bot by a clear margin on an Elo ladder, and endgame PIMC search adds roughly another 25 points per deck on top.</dd></div>
+      <div class="m"><dt>Type</dt><dd>Personal side project</dd></div>
+      <div class="m"><dt>Timeframe</dt><dd>June – July 2026, ~3 weeks</dd></div>
+      <div class="m"><dt>Engine</dt><dd>Rust workspace: core, env, sim, ai, TUI, PyO3 bindings</dd></div>
+      <div class="m"><dt>Learning</dt><dd>PyTorch, Deep Monte-Carlo self-play, single RTX 5090</dd></div>
+      <div class="m"><dt>Team</dt><dd>Arthur Gao</dd></div>
+    </dl>
+  </section>
+
+  <!-- Reading surface: the article sits on paper; orange returns for the closing band. -->
+  <div class="paper">
+
+  <div class="p-body wrap grid">
+    <aside class="p-aside label" aria-label="Contents">
+      <div class="stick">
+        <span>Contents (06)</span>
+        <ol>
+          <li><a href="#why-hard"><span>01</span> Why Shengji Is Hard</a></li>
+          <li><a href="#architecture"><span>02</span> Architecture</a></li>
+          <li><a href="#training"><span>03</span> Training</a></li>
+          <li><a href="#search"><span>04</span> Search</a></li>
+          <li><a href="#evaluation"><span>05</span> Evaluation</a></li>
+          <li><a href="#next"><span>06</span> What I'd Do Next</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <article class="prose" id="article">
+      <h2 id="why-hard">Why Shengji Is Hard</h2>
+      <p>Shengji (升级, also called Tractor or 八十分) is a Chinese trick-taking game. Four players in two fixed partnerships play with two full decks, 108 cards, and fight over the 5s, 10s and Kings: 200 points per deck. The defending team tries to keep the attackers below 80. Win and your team climbs a level, from 2 toward Ace.</p>
+      <p>It is a far nastier problem for an AI than chess, for four reasons.</p>
+      <h3>Hidden information</h3>
+      <p>You see 25 of your own cards and whatever has been played. The other three hands, and the eight-card kitty the dealer buried, are hidden. Any decision is a bet over thousands of possible deals, and a good player is constantly inferring who is void in what.</p>
+      <h3>Trump changes every round</h3>
+      <p>The trump suit is set by a bidding race during the deal, and the trump rank is whatever level the defenders are on. Every round reshuffles which cards are strong. With 13 ranks and either a suit or no-trump, there are 65 trump specifications, and a strategy that is excellent under one can be terrible under another.</p>
+      <h3>Team play</h3>
+      <p>You can't talk to your partner, but you can signal through what you play: feeding points to a partner who is winning the trick, or leading a suit they are void in. Score is shared, so a move that is bad for you can be great for the team.</p>
+      <h3>Tractors and throws</h3>
+      <p>Leads aren't single cards. You can lead a pair, a tractor (consecutive pairs, like 7-7-8-8), or a throw that combines several units at once, and followers have to match the shape as far as they can. The legal action space is combinatorial, and the engine has to enumerate it exactly. An early version ran out of memory on follow generation before I rewrote it constructively.</p>
+
+      <h2 id="architecture">Architecture</h2>
+      <p>The split is simple: Rust owns the game, Python owns the learning.</p>
+      <p><code>shengji-core</code> is a pure, deterministic state machine for the full rules: dealing, bidding, kitty exchange, trick legality, throw adjudication and scoring. It does no I/O and uses no randomness or threads, so the same engine runs in a seeded simulator, a ratatui terminal client and the training loop. Every rule has tests, and a self-play harness runs thousands of seeded games checking invariants (point conservation, hand sizes, legal follows).</p>
+      <p><code>shengji-env</code> wraps the engine as a step-able RL environment and encodes observations and actions as tensors. <code>shengji-py</code> exposes a batched <code>VecEnv</code> to Python through PyO3, parallelised with rayon, so one call steps hundreds of games. The trained network goes back into Rust for evaluation: a pure-Rust transformer forward pass that matches PyTorch to 1.9e-6, so the learned bot plays on exactly the same ladder as the hand-written ones.</p>
+
+      <figure class="wide pipeline">
+        <svg viewBox="0 0 960 300" role="img" aria-labelledby="pipe-t pipe-d" xmlns="http://www.w3.org/2000/svg">
+          <title id="pipe-t">Shengji AI pipeline</title>
+          <desc id="pipe-d">The Rust engine feeds a batched environment to PyTorch self-play training. The trained transformer is exported back to Rust, where it drives PIMC search and plays on the Elo league.</desc>
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          </defs>
+          <g font-family="Atkinson Hyperlegible Mono, ui-monospace, monospace" font-size="14" fill="currentColor">
+            <text x="20" y="28" font-weight="700">RUST</text>
+            <text x="20" y="178" font-weight="700">PYTHON / PYTORCH</text>
+            <line x1="20" y1="150" x2="940" y2="150" stroke="currentColor" stroke-dasharray="4 4"/>
+
+            <rect x="20" y="44" width="170" height="70" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="105" y="74" text-anchor="middle">shengji-core</text>
+            <text x="105" y="96" text-anchor="middle" font-size="12">rules, legal moves</text>
+
+            <rect x="250" y="44" width="170" height="70" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="335" y="74" text-anchor="middle">shengji-env</text>
+            <text x="335" y="96" text-anchor="middle" font-size="12">encode, determinize</text>
+
+            <rect x="250" y="194" width="170" height="70" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="335" y="224" text-anchor="middle">VecEnv (PyO3)</text>
+            <text x="335" y="246" text-anchor="middle" font-size="12">512 games / batch</text>
+
+            <rect x="480" y="194" width="200" height="70" fill="currentColor" stroke="currentColor" stroke-width="2"/>
+            <text x="580" y="224" text-anchor="middle" class="on-ink">DMC self-play</text>
+            <text x="580" y="246" text-anchor="middle" font-size="12" class="on-ink">card transformer, Q(s,a)</text>
+
+            <rect x="480" y="44" width="200" height="70" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="580" y="74" text-anchor="middle">Rust inference</text>
+            <text x="580" y="96" text-anchor="middle" font-size="12">SJT1 weights, greedy</text>
+
+            <rect x="740" y="24" width="200" height="50" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="840" y="54" text-anchor="middle">PIMC endgame search</text>
+
+            <rect x="740" y="90" width="200" height="50" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="840" y="120" text-anchor="middle">Elo league + CIs</text>
+
+            <g stroke="currentColor" stroke-width="2" fill="none" marker-end="url(#ar)">
+              <path d="M190,79 H246"/>
+              <path d="M335,114 V190"/>
+              <path d="M420,229 H476"/>
+              <path d="M580,194 V118"/>
+              <path d="M680,70 L736,50"/>
+              <path d="M680,88 L736,112"/>
+            </g>
+            <text x="590" y="162" font-size="12">export</text>
+          </g>
+        </svg>
+        <figcaption>Fig. 01 — The pipeline. Rust plays the games, PyTorch learns from them, and the learned net goes back into Rust to be searched over and measured.</figcaption>
+      </figure>
+
+      <h3>Why a set-style transformer fits cards</h3>
+      <p>A hand is a set, not a sequence. There is no meaningful order to your 25 cards, and with two decks most cards appear twice. A plain MLP over a flat vector has to learn every card relationship from scratch. Attention lets each card look at every other card directly, which is what Shengji strategy is about: do I hold the pair above this pair, is this King still protected, which suits am I short in.</p>
+      <p>Before the network sees anything, cards are encoded relative to the current trump: by role (the strongest trump, the second-strongest, the off-suit Ace) rather than by identity. My model treats the 64 canonical card slots as tokens. Each token carries feature planes (copies in my hand, copies already played, cards in the current trick, the lead, the kitty if I'm the dealer, point value), plus a learned slot embedding so it knows that slot 5 sits just below slot 6 in strength. The model is 3 pre-LN encoder layers, d_model 128, 4 heads and about 484k parameters.</p>
+      <p>It is <em>encode-once, score-many</em>: the transformer runs once per decision to produce a summary token, then a small MLP head scores each legal action against that summary. That matters, because a lead with throws can have dozens of legal options.</p>
+
+      <h2 id="training">Training</h2>
+      <p>The method is Deep Monte-Carlo (DMC), the family behind DouZero for Dou Dizhu. All four seats are played by the same network. Every legal action gets scored, the best is taken (with epsilon exploration, 0.12 decaying to 0.02), and once the round ends every (state, action) pair is regressed toward the final return for that seat. There is no hand-labelled data and no search during training. The net learns entirely from playing itself.</p>
+      <p>The champion trained for 40,000 iterations of about 50,000 decisions each, roughly 13 hours on one RTX 5090. The GPU sat at about 20% utilisation the whole time. The bottleneck was Rust stepping the games, not the network, so the biggest speedups came from the environment side: rayon-parallel batches (2.7× faster collection) and keeping action selection on the GPU.</p>
+
+      <h3>What worked and what didn't</h3>
+      <p><strong>Canonicalization worked.</strong> Encoding cards by trump-relative role, instead of by identity, was the biggest single jump when training across many trump specs. It lets one suit's training carry over to the other three for free.</p>
+      <p><strong>Ranks don't canonicalize.</strong> Suits are symmetric, but ranks aren't. Points are pinned to 5, 10 and King, so moving the trump rank changes how scoring interacts with trump strength. A net trained only at trump rank 2 played worse than random at Ace trump. Each rank is a partly separate game.</p>
+      <p><strong>A variance-reducing baseline made things worse.</strong> Subtracting a learned state value from the return is textbook variance reduction. In a matched A/B it left the net about 53 points per deck worse. The value head explained most of the return, the leftover advantage was mostly hidden-card noise, and the Q-net fell back to predicting the mean. Here the high-variance return was carrying the signal the representation needed.</p>
+      <p><strong>Handing the net card-counting features hurt.</strong> Giving it explicit per-opponent void flags, the same signal my heuristic bot relies on, did worse than leaving them out (single seed). The net seems to build a richer opponent model when it has to infer voids itself.</p>
+      <p><strong>More compute stopped helping.</strong> Training the champion for another 15,000 iterations bought nothing measurable: 0.509 head-to-head [0.495, 0.523] over 4,800 paired decks. A bigger MLP didn't help either. Representation mattered much more than scale.</p>
+
+      <h2 id="search">Search</h2>
+      <p>Once the network plateaued, the next lever was search. Perfect Information Monte Carlo (PIMC) is the classic approach for hidden-information card games. At a decision point:</p>
+      <ol>
+        <li>Sample N full deals consistent with everything I know: my hand, every card played, every void inferred from failures to follow, hand sizes.</li>
+        <li>For each legal move, force it in every sampled world and play the rest of the round with the network for all four seats.</li>
+        <li>Average the outcome per move and pick the best for my team.</li>
+      </ol>
+      <p>The sampler runs at about 730k worlds per second, so it is never the bottleneck. Search only switches on in the endgame, from around trick 10 to 13. Before that, the branching is huge and searching adds nothing measurable. At N = 64 worlds and the last 13 tricks, a move takes a median 69 ms on the GPU, fast enough for real-time play.</p>
+
+      <h3>Known weaknesses of PIMC</h3>
+      <p>PIMC has well-known flaws. <strong>Strategy fusion:</strong> it solves each sampled world as if it could see all the cards, so it assumes it can take different actions in worlds it can't actually tell apart. <strong>Non-locality:</strong> it ignores that opponents' earlier plays were themselves informed by their hands. <strong>No information hiding:</strong> it never chooses a move to keep the opponents guessing. In a partnership game that also means it can't reason about signalling to a partner.</p>
+      <p>I tested for these directly instead of assuming them away. If strategy fusion were biting, searching earlier in the round should eventually start to hurt. It never did: the gain kept growing down to the last 22 tricks. Rolling out with a different, equally strong net than the actual opponent cost 0 to 2 points, which is noise. PIMC added the same +20 to +25 against a different-architecture opponent as against a copy of itself, so the edge isn't self-exploitation.</p>
+      <p>Two expensive ideas turned out to be dead ends. A perfect-information "oracle" network as the rollout policy was a wash at every depth. Going beyond 64 sampled worlds didn't help. I also prototyped an exact alpha-beta endgame solver: 12.7 ms median with 4 tricks left, but 3.4 seconds with 6 left. Too slow for real-time play, but viable for generating offline training labels.</p>
+
+      <h2 id="evaluation">Evaluation</h2>
+      <p>Card games are noisy. A single deal can swing 100 points on luck alone, so I put most of the project's rigour into measurement. Every comparison uses <strong>duplicate deals</strong>: each deck is played twice with the teams swapped, and only the difference counts. The dealer rotates through all four seats. For play-only comparisons every bot buries the kitty with the same default rule, so I'm measuring trick play, not burial. Ratings come from a Bradley-Terry / Elo fit over a round-robin, with <strong>bootstrap 95% confidence intervals</strong>, and every result is logged with its git SHA.</p>
+      <p>That rigour paid for itself. Halfway through, an audit of my own results found a bug that silently truncated input width, so stale checkpoints scored as garbage. It also found claims I had chained through transitivity instead of measuring head-to-head. I fixed the bugs, rebuilt the eval, and re-measured everything below directly.</p>
+
+      <h3>Elo league</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Agent</th><th class="n">Elo</th><th class="n">95% CI</th></tr></thead>
+          <tbody>
+            <tr><td>Transformer (DMC, 40k iters)</td><td class="n">1962</td><td class="n">[1934, 1997]</td></tr>
+            <tr><td>Heuristic bot (hand-written)</td><td class="n">1806</td><td class="n">[1780, 1840]</td></tr>
+            <tr><td>MLP (DMC)</td><td class="n">1231</td><td class="n">—</td></tr>
+            <tr><td>Random legal play</td><td class="n">1000</td><td class="n">anchor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The heuristic bot isn't a strawman. It counts cards, tracks voids and beats random by about 95 to 102 points per deck. The transformer beats it in about 72% of paired games. Measured directly, the margin is +17.9, +12.6 and +21.0 points per deck at trump ranks 2, 5 and 8, all with CIs excluding zero. At Ace trump it is only +2.1 [−2.1, +6.3], which is inconclusive.</p>
+
+      <h3>PIMC on top of the network</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Search covers</th><th class="n">Gain (pts / deck)</th><th class="n">95% CI</th></tr></thead>
+          <tbody>
+            <tr><td>Last ~4 tricks</td><td class="n">+1.1</td><td class="n">[+0.8, +1.4]</td></tr>
+            <tr><td>Last ~7 tricks</td><td class="n">+6.3</td><td class="n">[+5.1, +7.4]</td></tr>
+            <tr><td>Last ~10 tricks</td><td class="n">+12.7</td><td class="n">[+11.0, +14.4]</td></tr>
+            <tr><td>Last ~13 tricks</td><td class="n">+20.3</td><td class="n">[+18.0, +22.5]</td></tr>
+            <tr><td>Last ~16 tricks</td><td class="n">+25.3</td><td class="n">[+23.0, +27.7]</td></tr>
+            <tr><td>Last ~22 tricks</td><td class="n">+31.3</td><td class="n">[+27.0, +35.6]</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Against the plateaued net playing greedily, PIMC adds about 25 points per deck out of 200 when it searches the last 16 tricks. Most of the value is in the middle of the round, tricks 10 to 18, where the fight over points and trump happens. The opening is almost worthless to search, which is convenient, because it's also the most expensive part.</p>
+      <p>Caveats: all search results so far are on the four trump ranks the champion trained on. PIMC hasn't yet been rated against the heuristic bot on the league, and there is no human or external baseline in the harness yet. So I can say the bot is clearly stronger than my heuristic, not that it is superhuman.</p>
+
+      <figure class="wide">
+        <ol class="bars" aria-label="PIMC gain in points per deck, by how far back search reaches">
+          <li><span>Last ~4 tricks</span><i style="--v: 1.1"></i><b>+1.1</b></li>
+          <li><span>Last ~7 tricks</span><i style="--v: 6.3"></i><b>+6.3</b></li>
+          <li><span>Last ~10 tricks</span><i style="--v: 12.7"></i><b>+12.7</b></li>
+          <li><span>Last ~13 tricks</span><i style="--v: 20.3"></i><b>+20.3</b></li>
+          <li><span>Last ~16 tricks</span><i style="--v: 25.3"></i><b>+25.3</b></li>
+          <li><span>Last ~22 tricks</span><i style="--v: 31.3"></i><b>+31.3</b></li>
+        </ol>
+        <figcaption>Fig. 02 — PIMC gain over greedy play as search reaches further back in the round</figcaption>
+      </figure>
+
+      <h2 id="next">What I'd Do Next</h2>
+      <ul>
+        <li><strong>Distil the search back into the net.</strong> PIMC is a fixed bonus on a frozen net. An AlphaZero-style loop (search, imitate the search, search again with the better net) is the only path past the plateau, and it's the experiment that decides whether this gets to superhuman. I've built the label collector; the run hasn't happened yet.</li>
+        <li><strong>Cover the whole game.</strong> I've since trained generalist nets for all 13 suited ranks and for no-trump, and shipped them to a client. They still need to go on the league, and the bot still doesn't bid. It plays the hand and buries the kitty, but trump selection is where a lot of real game value lives.</li>
+        <li><strong>A real PIMC bot in Rust.</strong> Port the search into the Rust harness so it can be rated against the heuristic on the same Elo ladder, and use an exact solver for the last few tricks.</li>
+        <li><strong>Teach it to signal.</strong> Partnership is the least-exploited part of the game. One idea: train each team as a single shared-information player, then explicitly reward plays that make a partner's beliefs more accurate.</li>
+      </ul>
+    </article>
+  </div>
+
+  </div>
+
+  <section class="sect p-next" aria-labelledby="more-h">
+    <div class="sect__head wrap grid">
+      <h2 class="sect__title" id="more-h">Index<sup>(06)</sup></h2>
+      <span class="sect__count label">Projects</span>
+    </div>
+    <ol class="rows">
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">01</span>
+            <h3 class="row__title"><a href="whispers.html">Whispers</a> <span class="row__aff label">(Interactive / AI / Story)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="whispers.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">02</span>
+            <h3 class="row__title"><a href="bigband.html">Big Band</a> <span class="row__aff label">(Agents / Merge Orchestration)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="bigband.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">03</span>
+            <h3 class="row__title"><a href="#top" aria-current="page">Shengji AI</a> <span class="row__aff label">(Rust / PyTorch / Self-play)</span></h3>
+            <span class="row__when label">Side project</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <p class="label">You are here.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">04</span>
+            <h3 class="row__title"><a href="chess.html">Embedded Chess</a> <span class="row__aff label">(Embedded / Rust / PCB)</span></h3>
+            <span class="row__when label">CSC385</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="chess.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">05</span>
+            <h3 class="row__title"><a href="projection.html">Projection Mapping</a> <span class="row__aff label">(Web / Animation / Education)</span></h3>
+            <span class="row__when label">CSC490</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="projection.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">06</span>
+            <h3 class="row__title"><a href="parsing.html">GPT Parsing</a> <span class="row__aff label">(Data / GPT-4 / Research)</span></h3>
+            <span class="row__when label">SCOTUS data</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="parsing.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+    </ol>
+  </section>
+</main>
+
+<footer class="foot wrap grid">
+  <p class="foot__big"><a href="../index.html">Arthur Gao</a></p>
+  <span class="foot__l label">Turning code into campfire stories</span>
+  <nav class="foot__soc label soc" aria-label="Elsewhere"><a href="https://www.linkedin.com/in/-arthurgao-/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://x.com/arthuregao" target="_blank" rel="noopener">X <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://www.instagram.com/arthurgaounofficial/" target="_blank" rel="noopener">Instagram <span aria-hidden="true">↗</span></a></nav>
+  <span class="foot__r label"><a href="#top">Back to top ↑</a></span>
+</footer>
+</body>
+</html>

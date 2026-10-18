@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Whispers — Arthur Gao</title>
+<meta name="description" content="Whispers is an animated, episodic interactive AI thriller in which the live audience are the voices in the detective's head. I’m Technical Director and co-invented the story loop that turns audience chat into story in near real time." />
+<meta name="theme-color" content="#ff5f00" />
+<link rel="icon" href="../favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" />
+<link rel="stylesheet" href="../styles.css" />
+<script src="../index.js" defer></script>
+</head>
+<body class="reading">
+<a class="skip" href="#article">Skip to article</a>
+
+<header class="bar wrap grid label">
+  <a class="bar__id" href="../index.html">Arthur Gao<span class="long"> / Index</span></a>
+  <span class="bar__role">Technical Director, Pickford AI</span>
+  <nav aria-label="Primary">
+    <ul class="bar__nav">
+      <li><a href="../index.html#experience">Experience<sup>06</sup></a></li>
+      <li><a href="../index.html#projects">Projects<sup>06</sup></a></li>
+      <li><a href="../index.html#film">Film</a></li>
+      <li><a href="../index.html#about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="p-head wrap grid">
+    <div class="p-crumb label">
+      <a href="../index.html#projects">← Index</a>
+      <span>Pickford AI</span>
+    </div>
+    <h1 class="p-title">Whispers</h1>
+    <p class="p-deck">An interactive AI thriller where the audience are the voices in the detective’s head</p>
+  </section>
+
+  <section class="p-meta wrap grid" aria-label="Project details">
+    <dl>
+      <div class="m"><dt>Summary</dt><dd class="m-sum">An animated, episodic thriller written and rendered in near real time. Detective Marcus Kent hears whispers, and the whispers are the live audience typing in chat.</dd></div>
+      <div class="m"><dt>Role</dt><dd>Technical Director</dd></div>
+      <div class="m"><dt>Company</dt><dd>Pickford AI</dd></div>
+      <div class="m"><dt>Years</dt><dd>2025–present</dd></div>
+      <div class="m"><dt>Status</dt><dd>Ongoing</dd></div>
+      <div class="m"><dt>Recognition</dt><dd>Finalist, 2026 Emmy® for Outstanding Innovation in Emerging Media; NeurIPS 2026 Creative AI Track</dd></div>
+      <div class="m"><dt>Links</dt><dd><a href="https://openreview.net/forum?id=iAb96aSsAn">Whispers paper ↗</a>, <a href="https://openreview.net/forum?id=9QPGiyCW7j">Crowd-sourced humor paper ↗</a>, <a href="https://pickford.ai">pickford.ai ↗</a></dd></div>
+    </dl>
+  </section>
+
+  <!-- Reading surface: the article sits on paper; orange returns for the closing band. -->
+  <div class="paper">
+
+  <!-- Typographic band in place of a production still. -->
+  <section class="p-band wrap grid" aria-hidden="true">
+    <p class="p-band__big"><span>Finalist</span> <span>2026 Emmy<sup class="reg">®</sup></span></p>
+    <p class="p-band__meta label">Outstanding Innovation in Emerging Media<br />NeurIPS 2026 Creative AI Track</p>
+  </section>
+
+  <div class="p-body wrap grid">
+    <aside class="p-aside label" aria-label="Contents">
+      <div class="stick">
+        <span>Contents (06)</span>
+        <ol>
+          <li><a href="#overview"><span>01</span> Overview</a></li>
+          <li><a href="#the-loop"><span>02</span> The loop</a></li>
+          <li><a href="#what-i-built"><span>03</span> What I built</a></li>
+          <li><a href="#story-intact"><span>04</span> Keeping the story intact</a></li>
+          <li><a href="#what-we-learned"><span>05</span> What we learned</a></li>
+          <li><a href="#credits"><span>06</span> Credits</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <article class="prose" id="article">
+      <h2 id="overview">Overview</h2>
+      <p>Whispers is an animated, episodic thriller that the audience plays together. Detective Marcus Kent hears voices. Those voices are the people in the room, typing into a live chat. There is no menu, no vote screen and no pause button. The chat runs continuously, and the story listens.</p>
+      <p>Dialog, scenes and story beats are written and rendered in near real time, inside a strict narrative framework. Almost none of the dialog is pre-written. Every voice still belongs to a human actor: the cast are SAG-AFTRA-contracted performers.</p>
+      <p>Whispers was created by three-time Emmy® winner Bernie Su and has been shown in theaters across the US.It premiered at Busan in September 2025 and screened at Sony in May 2026. It is a finalist for the 2026 Emmy® for Outstanding Innovation in Emerging Media.</p>
+      <p>I’m Technical Director. The system is presented in two NeurIPS 2026 Creative AI papers: <a href="https://openreview.net/forum?id=iAb96aSsAn">“WHISPERS: An Interactive AI Thriller Series”</a> and <a href="https://openreview.net/forum?id=9QPGiyCW7j">“How to Get an Audience to Laugh at a Live Generative Story: Crowd-Sourced Humor and Shared Agency”</a>.</p>
+
+      <h2 id="the-loop">The loop</h2>
+      <p>The core of Whispers is a loop that turns a room full of comments into the next minute of story. Ben Schreck and I invented it together.</p>
+
+      <figure class="wide">
+        <div class="loop">
+          <svg viewBox="0 0 720 300" role="img" aria-labelledby="loop-t loop-d">
+            <title id="loop-t">The Whispers story loop</title>
+            <desc id="loop-d">Audience chat is clustered into threads, threads are prioritised, a one-minute story block is written from up to two threads with one comment shown as a whisper, the block is rendered and played, and the audience responds, feeding the loop again. Narrative memory carries ideas forward as callbacks.</desc>
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+              </marker>
+            </defs>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="10" y="30" width="150" height="70" />
+              <rect x="285" y="30" width="150" height="70" />
+              <rect x="560" y="30" width="150" height="70" />
+              <rect x="560" y="190" width="150" height="70" />
+              <rect x="285" y="190" width="150" height="70" />
+              <rect x="10" y="190" width="150" height="70" />
+            </g>
+            <g fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#arr)">
+              <line x1="160" y1="65" x2="283" y2="65" />
+              <line x1="435" y1="65" x2="558" y2="65" />
+              <line x1="635" y1="100" x2="635" y2="188" />
+              <line x1="560" y1="225" x2="437" y2="225" />
+              <line x1="285" y1="225" x2="162" y2="225" />
+              <line x1="85" y1="190" x2="85" y2="102" />
+            </g>
+            <line x1="360" y1="190" x2="360" y2="102" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" />
+            <text x="85" y="60" text-anchor="middle" class="t-b">01 Chat</text>
+            <text x="85" y="80" text-anchor="middle">live comments</text>
+            <text x="360" y="60" text-anchor="middle" class="t-b">02 Threads</text>
+            <text x="360" y="80" text-anchor="middle">cluster + rank</text>
+            <text x="635" y="60" text-anchor="middle" class="t-b">03 Story block</text>
+            <text x="635" y="80" text-anchor="middle">≤ 2 threads, ~1 min</text>
+            <text x="635" y="220" text-anchor="middle" class="t-b">04 Whisper</text>
+            <text x="635" y="240" text-anchor="middle">a comment on screen</text>
+            <text x="360" y="220" text-anchor="middle" class="t-b">05 Render</text>
+            <text x="360" y="240" text-anchor="middle">voices + scene</text>
+            <text x="85" y="220" text-anchor="middle" class="t-b">06 Reaction</text>
+            <text x="85" y="240" text-anchor="middle">the room replies</text>
+            <text x="372" y="150">narrative memory → callbacks</text>
+          </svg>
+        </div>
+        <figcaption>Fig. 01 — How a whisper becomes story</figcaption>
+      </figure>
+
+      <p>Comments arrive continuously. The system clusters them into threads, so, say, twenty people asking Kent to search the same car count as one idea with a lot of weight behind it. Threads are prioritised by how well they fit the story and how strongly the audience is responding to them.</p>
+      <p>The story is written in blocks of roughly a minute. Each block draws on at most two threads, and at least one real comment appears near-verbatim on screen as a whisper in Kent’s head. That moment matters: it is how the audience knows they were heard.</p>
+      <p>A narrative memory carries ideas forward, so a joke or a suspicion from ten minutes ago can come back as a callback. And characters are allowed to push back. A suggestion is a nudge, not a command.</p>
+
+      <h2 id="what-i-built">What I built</h2>
+      <p>Ben built more of the infrastructure; I built more of the experience side: the parts that decide what the audience actually sees and hears.</p>
+      <h4>Story-block brancher</h4>
+      <p>The piece that takes the current threads and the state of the story and decides where the next block goes, within the bounds the writers set.</p>
+      <h4>Entrances, exits and character spawning</h4>
+      <p>Generated scenes have to be staged. I wrote the parsing that reads character entrances and exits out of each scene and the logic that spawns characters into it, so who is on screen always matches what is being said.</p>
+      <h4>Audience threads</h4>
+      <p>The system that groups chat into threads and feeds them into the story. At runtime, a classifier uses those threads to pick between scene variants, so the room’s leaning can change what plays next without anyone stopping to vote.</p>
+
+      <h2 id="story-intact">Keeping the story intact</h2>
+      <p>Handing a thriller to a live crowd is an easy way to lose the thriller. We designed against that from the start.</p>
+      <p>The audience steers through collective emotional guidance. No single message decides anything; the crowd’s aggregate leaning moves Kent, for example toward suspecting one person over another.</p>
+      <p>Underneath that sits a narrative integrity engine. Kent’s ethics and his focus on the case are hard constraints. The audience can shape where he goes, but not who he is. That is what makes the agency feel real: the detective has a character worth arguing with.</p>
+      <p>The paper calls this distributed narrative agency. In practice it meant the writers owned the framework, the audience owned the direction, and the system’s job was to keep both promises at once.</p>
+
+      <h2 id="what-we-learned">What we learned</h2>
+      <p>The clearest lesson came from the companion humor study, which ran the same story loop in a comedic setting. Across 133 stories and 401 participants, early inclusion of a participant’s comment was associated with 51.7% more commenting from them later on, after adjustment.</p>
+      <p>That result is observational, not causal, and the paper is careful to say so. Still, it points at what the design bets on: the whisper is the hook. Once someone sees their own words land in the story, they lean in.</p>
+      <p>The other lesson was about restraint. Using at most two threads per block, and letting characters resist, made the story feel more responsive, not less. A crowd does not want to be obeyed. It wants to be heard by someone with a point of view.</p>
+
+      <h2 id="credits">Credits</h2>
+      <p>Whispers was created by Bernie Su. I’m Technical Director at Pickford AI. Ben Schreck and I co-invented the core story loop; other engineers joined later and built on it. The cast are SAG-AFTRA-contracted actors.</p>
+      <p>The system is presented in two NeurIPS 2026 Creative AI papers: <a href="https://openreview.net/forum?id=iAb96aSsAn">the Whispers artwork paper</a> and <a href="https://openreview.net/forum?id=9QPGiyCW7j">the crowd-sourced humor paper</a>, both on OpenReview.</p>
+    </article>
+  </div>
+
+  </div>
+
+  <section class="sect p-next" aria-labelledby="more-h">
+    <div class="sect__head wrap grid">
+      <h2 class="sect__title" id="more-h">Index<sup>(06)</sup></h2>
+      <span class="sect__count label">Projects</span>
+    </div>
+    <ol class="rows">
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">01</span>
+            <h3 class="row__title"><a href="#top" aria-current="page">Whispers</a> <span class="row__aff label">(Interactive / AI / Story)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <p class="label">You are here.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">02</span>
+            <h3 class="row__title"><a href="bigband.html">Big Band</a> <span class="row__aff label">(Agents / Merge Orchestration)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="bigband.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">03</span>
+            <h3 class="row__title"><a href="shengji.html">Shengji AI</a> <span class="row__aff label">(Rust / PyTorch / Self-play)</span></h3>
+            <span class="row__when label">Side project</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="shengji.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">04</span>
+            <h3 class="row__title"><a href="chess.html">Embedded Chess</a> <span class="row__aff label">(Embedded / Rust / PCB)</span></h3>
+            <span class="row__when label">CSC385</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="chess.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">05</span>
+            <h3 class="row__title"><a href="projection.html">Projection Mapping</a> <span class="row__aff label">(Web / Animation / Education)</span></h3>
+            <span class="row__when label">CSC490</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="projection.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">06</span>
+            <h3 class="row__title"><a href="parsing.html">GPT Parsing</a> <span class="row__aff label">(Data / GPT-4 / Research)</span></h3>
+            <span class="row__when label">SCOTUS data</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="parsing.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+    </ol>
+  </section>
+</main>
+
+<footer class="foot wrap grid">
+  <p class="foot__big"><a href="../index.html">Arthur Gao</a></p>
+  <span class="foot__l label">Turning code into campfire stories</span>
+  <nav class="foot__soc label soc" aria-label="Elsewhere"><a href="https://www.linkedin.com/in/-arthurgao-/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://x.com/arthuregao" target="_blank" rel="noopener">X <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://www.instagram.com/arthurgaounofficial/" target="_blank" rel="noopener">Instagram <span aria-hidden="true">↗</span></a></nav>
+  <span class="foot__r label"><a href="#top">Back to top ↑</a></span>
+</footer>
+</body>
+</html>

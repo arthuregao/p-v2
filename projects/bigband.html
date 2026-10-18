@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Big Band — Arthur Gao</title>
+<meta name="description" content="The merge side of Big Band, an internal Pickford AI tool that carries a ticket through LLM agents to a reviewed, landed change: stacked-PR merge orchestration, a live-checked merge queue, and red/yellow/green PR triage." />
+<meta name="theme-color" content="#ff5f00" />
+<link rel="icon" href="../favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" />
+<link rel="stylesheet" href="../styles.css" />
+<script src="../index.js" defer></script>
+<!-- Page-local styles for the inline diagrams and the triage table only; everything else comes from ../styles.css. -->
+<style>
+  /* Page-local: diagram padding and the triage dots. Colours come from the shared tokens. */
+  .p-hero .diagram-wrap { padding: 0 var(--gutter); }
+  .tier { display: inline-block; width: 0.8em; height: 0.8em; border: var(--hair); border-radius: 50%; margin-right: 0.4em; vertical-align: -0.05em; }
+  .tier--red { background: #c4161c; }
+  .tier--yellow { background: #ffd400; }
+  .tier--green { background: #1f9d55; }
+  .prose td:has(.tier) { white-space: nowrap; }
+</style>
+</head>
+<body class="reading">
+<a class="skip" href="#article">Skip to article</a>
+
+<header class="bar wrap grid label">
+  <a class="bar__id" href="../index.html">Arthur Gao<span class="long"> / Index</span></a>
+  <span class="bar__role">Project 02 of 06</span>
+  <nav aria-label="Primary">
+    <ul class="bar__nav">
+      <li><a href="../index.html#experience">Experience<sup>06</sup></a></li>
+      <li><a href="../index.html#projects">Projects<sup>06</sup></a></li>
+      <li><a href="../index.html#film">Film</a></li>
+      <li><a href="../index.html#about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="p-head wrap grid">
+    <div class="p-crumb label">
+      <a href="../index.html#projects">← Index</a>
+      <span>02 / 06</span>
+    </div>
+    <h1 class="p-title">Big Band</h1>
+    <p class="p-deck">Landing what the agents write: stacked-PR merge orchestration and red/yellow/green triage for an agent-driven codebase</p>
+  </section>
+
+  <section class="p-meta wrap grid" aria-label="Project details">
+    <dl>
+      <div class="m"><dt>Summary</dt><dd class="m-sum">Big Band carries a ticket through LLM coding agents to a reviewed, landed change. This page covers the merge side: how stacks of dependent pull requests are ordered, validated and landed on main, how failures recover, and how a triage signal tells humans where to spend review time.</dd></div>
+      <div class="m"><dt>Role</dt><dd>Project lead</dd></div>
+      <div class="m"><dt>Company</dt><dd>Pickford AI</dd></div>
+      <div class="m"><dt>Year</dt><dd>2026</dd></div>
+      <div class="m"><dt>Stack</dt><dd>Python (asyncio), FastAPI, Postgres, React, GitHub API, LLM coding agents</dd></div>
+    </dl>
+  </section>
+
+  <!-- Reading surface: the article sits on paper; orange returns for the closing band. -->
+  <div class="paper">
+
+  <figure class="p-hero">
+    <div class="diagram-wrap diagram-scroll">
+      <svg class="diagram" viewBox="0 0 1200 460" role="img" aria-labelledby="hero-t hero-d">
+        <title id="hero-t">A stack of pull requests merging down into main</title>
+        <desc id="hero-d">Five stacked pull requests drawn as a tower. Each one merges into the branch of the PR beneath it, from the top down, until the bottom PR squashes into main as a single commit.</desc>
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="80" y="30" width="420" height="56" />
+          <rect x="80" y="104" width="420" height="56" />
+          <rect x="80" y="178" width="420" height="56" />
+          <rect x="80" y="252" width="420" height="56" />
+          <rect x="80" y="326" width="420" height="56" class="accent-fill" />
+          <line x1="40" y1="420" x2="1160" y2="420" stroke-width="4" />
+        </g>
+        <g font-size="20">
+          <text x="100" y="66">PR 5 · top of stack</text>
+          <text x="100" y="140">PR 4</text>
+          <text x="100" y="214">PR 3</text>
+          <text x="100" y="288">PR 2</text>
+          <text x="100" y="362">PR 1 · bottom, based on main</text>
+          <text x="40" y="448">main</text>
+        </g>
+        <g stroke="currentColor" stroke-width="2" fill="none">
+          <path d="M520 58 C 570 58, 570 132, 520 132" />
+          <path d="M520 132 C 570 132, 570 206, 520 206" />
+          <path d="M520 206 C 570 206, 570 280, 520 280" />
+          <path d="M520 280 C 570 280, 570 354, 520 354" />
+          <path d="M290 382 L 290 414" stroke-width="4" />
+        </g>
+        <g font-size="16">
+          <text x="580" y="100">merge into parent's branch</text>
+          <text x="580" y="174">wait: parent mergeability known</text>
+          <text x="580" y="248">assert: parent diff grew</text>
+          <text x="580" y="322">repeat, top down</text>
+          <text x="310" y="408">one squash commit</text>
+        </g>
+        <g>
+          <text class="t-big" x="880" y="248" font-size="34">Top down.</text>
+          <text class="t-big" x="880" y="290" font-size="34">Never</text>
+          <text class="t-big" x="880" y="332" font-size="34">on a timer.</text>
+          <text x="580" y="372" font-size="16">Every approval kept; main sees one commit.</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Fig. 01 — How Big Band lands a stack: each PR merges into its parent's branch, top down, with a check between every step</figcaption>
+  </figure>
+
+  <div class="p-body wrap grid">
+    <aside class="p-aside label" aria-label="Contents">
+      <div class="stick">
+        <span>Contents (06)</span>
+        <ol>
+          <li><a href="#problem"><span>01</span> The Problem</a></li>
+          <li><a href="#landing"><span>02</span> How a Stack Lands</a></li>
+          <li><a href="#triage"><span>03</span> Triage</a></li>
+          <li><a href="#failure"><span>04</span> When Things Go Wrong</a></li>
+          <li><a href="#results"><span>05</span> Results</a></li>
+          <li><a href="#learned"><span>06</span> What I Learned</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <article class="prose" id="article">
+      <h2 id="problem">The Problem</h2>
+      <p>Big Band is the tool I lead at Pickford for turning a ticket into a reviewed, landed change. An operator labels a ticket in our issue tracker; Big Band starts an LLM coding agent in a persistent workspace, has a second agent from a different model provider review the result, routes findings back for repair, and hands a clean pull request to a human. The implementation half of that loop worked sooner than I expected. The merge half is where the time went.</p>
+      <p>Agents are good at producing many small, dependent pull requests. A single refactor can come back as a stack dozens of PRs deep, with branches fanning out from the middle. Each PR is reviewable on its own, which is the point, but someone still has to land the whole thing on main in the right order without losing work, approvals or attribution. That someone was a human, merging by hand, and humans became the bottleneck.</p>
+      <p>Hand-merging is also where the quiet failures live. GitHub's view of a stack is eventually consistent, squash merges rewrite history under the PRs that depend on them, and every PR in a stack can pass CI while the combination does not. None of these fail loudly. They look like success.</p>
+
+      <h2 id="landing">How a Stack Lands</h2>
+      <p>The merge side has two parts. A merge queue owns order: which ticket goes next, and whether it is still allowed to. Big Band owns the merge itself: rebasing, validating and landing the stack, then reporting what happened. They talk through tracker labels and one authenticated heartbeat, nothing else. The queue sends no refs and no job payload; Big Band rereads everything it needs from GitHub.</p>
+
+      <figure class="wide">
+        <div class="diagram-wrap diagram-scroll">
+          <svg class="diagram" viewBox="0 0 960 664" role="img" aria-labelledby="pipe-t pipe-d">
+            <title id="pipe-t">The merge pipeline from approval to main</title>
+            <desc id="pipe-d">Seven steps in two columns. Queue side: approved ticket enters the queue, dispatch rereads live approval and dependencies, the queue rings Big Band with a label. Big Band side: walk the live stack and record every layer, build an integration tree and run the full suite, merge top down with a check after each step, audit main and report an outcome label. Failures loop back to the queue or park for a human.</desc>
+            <g font-size="13">
+              <text x="20" y="28">MERGE QUEUE · owns order</text>
+              <text x="500" y="28">BIG BAND · owns the merge</text>
+            </g>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="20" y="44" width="420" height="124" />
+              <rect x="20" y="200" width="420" height="124" />
+              <rect x="20" y="356" width="420" height="124" />
+              <rect x="500" y="44" width="440" height="124" />
+              <rect x="500" y="200" width="440" height="124" />
+              <rect x="500" y="356" width="440" height="124" />
+              <rect x="500" y="512" width="440" height="124" class="accent-fill" />
+              <path d="M230 168 L230 194" /><path d="M224 186 L230 196 L236 186" />
+              <path d="M230 324 L230 350" /><path d="M224 342 L230 352 L236 342" />
+              <path d="M720 168 L720 194" /><path d="M714 186 L720 196 L726 186" />
+              <path d="M720 324 L720 350" /><path d="M714 342 L720 352 L726 342" />
+              <path d="M720 480 L720 506" /><path d="M714 498 L720 508 L726 498" />
+              <path d="M440 418 C 470 418, 470 106, 494 106" /><path d="M486 100 L496 106 L486 112" />
+              <path d="M500 574 L120 574 L120 488" stroke-dasharray="6 5" /><path d="M114 496 L120 486 L126 496" />
+            </g>
+            <g font-size="15">
+              <text x="36" y="76" class="t-big" font-size="20">1 · Approved ticket queued</text>
+              <text x="36" y="102">Human approval on the exact reviewed</text>
+              <text x="36" y="124">head. Ordered by rank; dependency</text>
+              <text x="36" y="146">edges respected.</text>
+              <text x="36" y="232" class="t-big" font-size="20">2 · Dispatch rereads live</text>
+              <text x="36" y="258">Approval and blockers fetched fresh.</text>
+              <text x="36" y="280">Cache can widen the scan, never</text>
+              <text x="36" y="302">decide it.</text>
+              <text x="36" y="388" class="t-big" font-size="20">3 · Ring Big Band</text>
+              <text x="36" y="414">One in-flight slot. A command label</text>
+              <text x="36" y="436">is the doorbell; heartbeats prove</text>
+              <text x="36" y="458">liveness.</text>
+              <text x="516" y="76" class="t-big" font-size="20">4 · Walk and record the stack</text>
+              <text x="516" y="102">Live topology, heads and reviews from</text>
+              <text x="516" y="124">GitHub. Every layer saved before a</text>
+              <text x="516" y="146">worker starts.</text>
+              <text x="516" y="232" class="t-big" font-size="20">5 · Integration tree</text>
+              <text x="516" y="258">Merge every leaf into one tree; run</text>
+              <text x="516" y="280">the full suite; diff failures</text>
+              <text x="516" y="302">against main.</text>
+              <text x="516" y="388" class="t-big" font-size="20">6 · Merge top down</text>
+              <text x="516" y="414">Poll until settled, assert the</text>
+              <text x="516" y="436">parent's diff grew, then take the</text>
+              <text x="516" y="458">next layer.</text>
+              <text x="516" y="544" class="t-big" font-size="20">7 · Audit and report</text>
+              <text x="516" y="570">Verify every PR merged on GitHub;</text>
+              <text x="516" y="592">outcome label says landed all, some,</text>
+              <text x="516" y="614">none or unknown.</text>
+              <text x="136" y="600" font-size="13">base moved, failed or parked</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Fig. 02 — The merge pipeline. The queue decides what goes next; Big Band decides whether it can land and does the landing</figcaption>
+      </figure>
+
+      <h3>1. Getting into the queue</h3>
+      <p>A ticket becomes eligible only after the automated review passes and a human approves the exact head that was independently reviewed. Approval moves the ticket to a queued state but never merges anything. Queue entries carry sparse ranks so they can be reordered, and no manual move can put a ticket ahead of something it depends on.</p>
+
+      <h3>2. Dispatch rereads the world</h3>
+      <p>The queue keeps a cache of GitHub and tracker data so the review UI is fast, but the cache is never allowed to authorise a merge. A dispatch round takes a lock, reads a bounded window of candidates, releases the lock while it fetches live approval and dependency state, then retakes the lock and rereads its own rows before claiming anything. A failed upstream read holds the candidate; it is never treated as an empty answer. An approval dismissed by a force-push after enqueue holds the entry rather than removing it. Only one entry is ever in flight.</p>
+
+      <h3>3. The doorbell</h3>
+      <p>The queue does not merge. It writes a namespaced command label on the ticket, and Big Band picks it up, marks the run as merging, and starts sending heartbeats. Labels are not transactional, so the queue revalidates the attempt after every external write, and the live label set, not a local field, is the source of idempotence. A stale worker cannot finalise a later attempt.</p>
+
+      <h3>4. Walk and record the stack</h3>
+      <p>Big Band derives the stack from live GitHub: topology, head SHAs, reviews and the base branch. Trunk branches always terminate a chain, so a release PR cannot accidentally adopt unrelated stacks. Every layer is written to durable state before a worker launches, which matters later: if a parent merges and GitHub retargets its child to main, the recorded layers still show what the stack was.</p>
+
+      <h3>5. Validate the union, not the parts</h3>
+      <p>Per-PR CI only sees one PR's diff, so a break that spans two PRs in different parts of the codebase is invisible until everything is in one tree. Before merging anything, Big Band merges every leaf into a single integration tree, runs the full unit suite and the generated-artifact freshness checks on it, and diffs the failures against the same suite on main to separate what the stack caused from what was already broken. This is the cheapest step in the pipeline and the one that catches the most.</p>
+      <p>The required-versus-advisory split comes from the repository's ruleset API, not from what the checks UI shows. Merging with a known-advisory check red is honest; merging with a required check red or unreported is refused.</p>
+
+      <h3>6. Merge down, top first</h3>
+      <p>Landing walks a strict reverse-topological order computed up front. Each PR merges into its parent's branch, and the bottom PR's final squash is the single commit that reaches main. Every approval in the chain is preserved and every PR is recorded as merged, rather than closed in favour of a fresh consolidation branch that would throw away all of its approvals.</p>
+      <p>Between steps there is no timer. After each merge Big Band polls until the PR reports merged and its parent reports a known mergeability, then asserts that the parent's diff against base grew by at least the child's file count. Only then does it take the next layer.</p>
+
+      <h3>7. Audit and hand back</h3>
+      <p>When the walk finishes, the host process (not the agent) verifies every layer on live GitHub: merged, with the expected head, base and merge commit. It then writes an outcome label for the queue, plus a comment saying how much landed and, if anything is left, what to fix and how to retry. A ticket moves to done only after GitHub reports the merge commit.</p>
+
+      <h4>Where humans sit</h4>
+      <p>Agents no longer merge to main themselves by default. Creating a merge request for the queue counts as the human review step, so an agent that was not explicitly told to merge asks first. After that, recovery from a moved base, a conflict or a failed attempt belongs to the queue and Big Band. A person is pulled back in only when the report says one is needed. The top-down procedure is also written down as a guide, so a human can run it by hand as an audited break-glass path when the queue is bypassed.</p>
+
+      <h2 id="triage">Triage: Red, Yellow, Green</h2>
+      <p>Once agents can produce PRs faster than people can read them, the scarce resource is human attention. I wanted a signal on every open PR that answers one question: does this change a promise that something outside the change depends on?</p>
+      <p>Size turned out to be a bad proxy. The smallest contract break I measured in our repository was 14 lines, a renamed field on a payload published to a message stream. The largest safe change was 8,716 lines of brand-new package. So the classifier reads the diff instead.</p>
+
+      <table>
+        <thead><tr><th>Tier</th><th>What a reviewer should do</th><th>What drives it</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tier tier--red" aria-hidden="true"></span>Red</td><td>Full review</td><td>A mechanical rule fired with a citable diff line, or the semantic read is confident the change alters a contract.</td></tr>
+          <tr><td><span class="tier tier--yellow" aria-hidden="true"></span>Yellow</td><td>Quick scan</td><td>The semantic read leans toward a contract change but stops short of the threshold, or thinks only supporting files changed. Yellow never gates a merge.</td></tr>
+          <tr><td><span class="tier tier--green" aria-hidden="true"></span>Green</td><td>Land as is</td><td>No rule fired and the semantic read does not escalate.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Two halves that miss different things</h3>
+      <p>The mechanical half is a set of pure functions over unified diff text. It flags removed public fields, removed routes, schemas switched to reject unknown fields, and migrations whose <em>upgrade</em> path drops or alters something. Every flag carries the verbatim diff line that triggered it, so a reviewer checks evidence instead of trusting a verdict. The rules got narrower each time a looser version measured wrong: a field removed inside a test is not a contract break, and a table dropped in a migration's downgrade never runs on a forward deploy.</p>
+      <p>The semantic half asks an LLM a handful of typed questions about the diff and gets probabilities back rather than prose: how likely it alters a contract, how likely it breaks a consumer, and which surface it touches. It exists for breaks that leave no syntactic marker, like a renamed stream topic, a changed cache-key format, or a symbol dropped from a module's exports.</p>
+      <p>Two properties held the design together. The semantic read is <strong>escalate-only</strong>: it can add a reviewer but never clear one, because only the mechanical half produces citations a person can verify. And it <strong>degrades to nothing</strong>: no key, a timeout, rate limiting or a malformed reply all fall back to the mechanical verdict. A triage signal that sits in front of a merge queue must not block it, or escalate everything, when a provider has a bad day.</p>
+
+      <h3>Stacks complicate attribution</h3>
+      <p>A stacked PR's diff against main includes everything below it, so a break in the bottom PR would paint the whole tower red. Verdicts are therefore computed against the parent's head and keyed on both the PR's head SHA and its parent's head SHA. A force-push to the parent changes what the child authored without moving the child's own head, and the key catches that. A verdict whose head has since moved is not served at all. In the queue view an entry shows the worst tier across its PRs, and the diff pane shows the evidence: the basis, each cited line, and the semantic read as percentages.</p>
+      <p>The triage stack was built, measured and shown working in the review UI, but it was parked before landing on main while other merge work took priority.</p>
+
+      <h2 id="failure">When Things Go Wrong</h2>
+      <p>Most of the rules above exist because a hand-merge of a large agent-produced tower failed in a way that looked like success. The guide Big Band enforces is written as a list of those failures, each paired with the concrete incident that motivated it.</p>
+
+      <h3>The silent stale squash</h3>
+      <p>Merging a child updates its parent's branch, but GitHub takes a few seconds to recompute the parent's diff. Merge the next layer too early and you either get an honest "not mergeable" error, or, much worse, the merge succeeds against a stale head and squashes only that PR's own diff. In one tower that is exactly what happened: everything below one layer received 74 files instead of 491, with no error anywhere. The only signal was a file count someone had to check on purpose. That is why the pipeline polls for settled state and asserts content propagation after every merge.</p>
+
+      <h3>Orphaned children</h3>
+      <p>Squashing a parent rewrites history, so a child still carrying the parent's original commits conflicts. Top-down order avoids this, but any interruption reorders the work. The fix is to treat the order as a resumable queue rather than a loop: on interruption, recompute, retarget any child whose parent has merged onto the branch the parent merged into, and replay only the child's own commits.</p>
+
+      <h3>Partly landed stacks</h3>
+      <p>A run can die after merging the top layers into their parents but before main moves. Big Band now follows merged layers down to the first open PR and resumes from there. It refuses to resume from any shape that could land something twice: everything merged, the bottom merged, a merged layer below an open one, or a closed PR. Each previously merged layer must still check out on live GitHub before the new attempt trusts it.</p>
+
+      <h3>Retry policy by failure kind</h3>
+      <p>Not every failure deserves the same response, so retries are budgeted by kind.</p>
+      <table>
+        <thead><tr><th>Failure</th><th>Response</th></tr></thead>
+        <tbody>
+          <tr><td>Base branch moved</td><td>Retry without limit; does not count as an attempt</td></tr>
+          <tr><td>Test failure</td><td>Retry once</td></tr>
+          <tr><td>Real error</td><td>Up to three attempts within one run</td></tr>
+          <tr><td>Merge conflict</td><td>No automatic retry; back to a human</td></tr>
+          <tr><td>Big Band's own trouble</td><td>Park the ticket as unavailable; write no outcome</td></tr>
+        </tbody>
+      </table>
+      <p>Before a fresh attempt, the host rechecks its run fence and proves on GitHub that nothing landed. The last row is the one I like most. When the problem is Big Band's (a crashed worker, a stalled agent, a workspace error, a provider quota, GitHub being unreadable) the ticket keeps its merge command, gains an "unavailable" marker, and waits for someone to ring again. Infrastructure trouble is not a verdict on the ticket, so it should not be recorded as one. A layer that GitHub reports closed is a ticket problem, not infrastructure, and fails instead of parking.</p>
+
+      <h3>Liveness</h3>
+      <p>Because only one entry is ever in flight, a dead worker would stall the whole queue. Big Band sends a heartbeat every minute; once one has arrived, the queue's watchdog treats a beat older than three minutes as death and frees the slot. Before any heartbeat arrives, it falls back to a fifteen-minute no-progress timeout.</p>
+
+      <h3>Fail toward caution</h3>
+      <p>The same rule runs through every component: missing data holds work. A failed read is not an empty read, a cached hint never authorises a merge, safe mode suppresses automated writes while leaving human review alone, and a dashboard with nothing on it says "I may be broken" rather than looking idle.</p>
+
+      <h2 id="results">Results</h2>
+      <p>The clearest number is the one that started the merge work: an 80-PR tower, a 26-deep trunk with a 24-wide fan, merged to main by hand. It surfaced seven distinct failure modes, and recovering from each cost either a full re-derivation of the content path or a rebuild. All of it was recoverable only because no branch had been deleted, so keeping branches is now part of the procedure too.</p>
+      <p>The approval math alone justified merging down. A consolidation branch for one reviewed chain would have traded 28 approvals for 1 and lost the merged-status trail. Merging down through the chain kept all of them and still put a single commit on main.</p>
+      <p>For triage, I measured both halves over all 292 open PRs at the time, scored against 40 hand-adjudicated PRs containing 29 confirmed contract breaks, with every citation checked against the real git diff.</p>
+      <table>
+        <thead><tr><th></th><th>Recall</th><th>False flags</th><th>PRs escalated</th></tr></thead>
+        <tbody>
+          <tr><td>Mechanical rules</td><td>24 / 29 (83%)</td><td>2</td><td>44 / 292 (15%)</td></tr>
+          <tr><td>Semantic read</td><td>23 / 29 (79%)</td><td>2</td><td>—</td></tr>
+          <tr><td>Union (red tier)</td><td>29 / 29 (100%)</td><td>3</td><td>81 / 292 (28%)</td></tr>
+        </tbody>
+      </table>
+      <p>Neither half cleared 83% on its own; together they caught every confirmed break at the cost of one extra false flag. Even at its most cautious, the union leaves roughly seven in ten open PRs green. I also found that 13% of open PRs carried file changes they did not author because of stacking, which is why verdicts are keyed on the parent's head.</p>
+
+      <h2 id="learned">What I Learned</h2>
+      <h3>Encode the procedure you have already debugged</h3>
+      <p>Our first plan for landing was ambitious: a native, transactional stack merge for routine 50- to 100-PR stacks, frozen candidates, one cumulative test run per stack, durable leases and a post-merge audit. We cancelled it. What shipped instead was the top-down procedure I had already been through by hand, with every failure turned into a check. The ambitious design wasn't wrong, but it was a design for problems we had imagined. The guide was built from problems we had actually had, and it was useful the day it was written.</p>
+
+      <h3>Most merge failures look like success</h3>
+      <p>The stale squash, the per-PR-green-but-union-broken stack and the consolidation branch that quietly drops approvals all report success. The defence is an assertion after every step that checks the outcome, not the exit code.</p>
+
+      <h3>Keep the boundary narrow</h3>
+      <p>Labels and a heartbeat feel primitive for connecting two services, but the narrow boundary is what made restarts safe. Neither side trusts the other's payload; both reread GitHub. Agents never hold tracker or merge credentials, and every state change happens in the host process, so a confused agent cannot land anything on its own.</p>
+
+      <h3>Make the cautious signal cheap to check</h3>
+      <p>Triage only helps if reviewers believe it. Citing the exact diff line behind every red, and letting the LLM escalate but never clear, turned an opaque score into something a person can dispute in a few seconds.</p>
+    </article>
+  </div>
+
+  </div>
+
+  <section class="sect p-next" aria-labelledby="more-h">
+    <div class="sect__head wrap grid">
+      <h2 class="sect__title" id="more-h">Index<sup>(06)</sup></h2>
+      <span class="sect__count label">Projects</span>
+    </div>
+    <ol class="rows">
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">01</span>
+            <h3 class="row__title"><a href="whispers.html">Whispers</a> <span class="row__aff label">(Interactive / AI / Story)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="whispers.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">02</span>
+            <h3 class="row__title"><a href="#top" aria-current="page">Big Band</a> <span class="row__aff label">(Agents / Merge Orchestration)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <p class="label">You are here.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">03</span>
+            <h3 class="row__title"><a href="shengji.html">Shengji AI</a> <span class="row__aff label">(Rust / PyTorch / Self-play)</span></h3>
+            <span class="row__when label">Side project</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="shengji.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">04</span>
+            <h3 class="row__title"><a href="chess.html">Embedded Chess</a> <span class="row__aff label">(Embedded / Rust / PCB)</span></h3>
+            <span class="row__when label">CSC385</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="chess.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">05</span>
+            <h3 class="row__title"><a href="projection.html">Projection Mapping</a> <span class="row__aff label">(Web / Animation / Education)</span></h3>
+            <span class="row__when label">CSC490</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="projection.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">06</span>
+            <h3 class="row__title"><a href="parsing.html">GPT Parsing</a> <span class="row__aff label">(Data / GPT-4 / Research)</span></h3>
+            <span class="row__when label">SCOTUS data</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="parsing.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+    </ol>
+  </section>
+</main>
+
+<footer class="foot wrap grid">
+  <p class="foot__big"><a href="../index.html">Arthur Gao</a></p>
+  <span class="foot__l label">Turning code into campfire stories</span>
+  <nav class="foot__soc label soc" aria-label="Elsewhere"><a href="https://www.linkedin.com/in/-arthurgao-/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://x.com/arthuregao" target="_blank" rel="noopener">X <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://www.instagram.com/arthurgaounofficial/" target="_blank" rel="noopener">Instagram <span aria-hidden="true">↗</span></a></nav>
+  <span class="foot__r label"><a href="#top">Back to top ↑</a></span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Embedded Chess — Arthur Gao</title>
+<meta name="description" content="An embedded chess project that incorprated a custom PCB with 3D printed parts and software written in Rust to create a chessboard that detects the position of pieces and highlights possible moves when a piece is picked up" />
+<meta name="theme-color" content="#ff5f00" />
+<link rel="icon" href="../favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" />
+<link rel="stylesheet" href="../styles.css" />
+<script src="../index.js" defer></script>
+</head>
+<body class="reading">
+<a class="skip" href="#article">Skip to article</a>
+
+<header class="bar wrap grid label">
+  <a class="bar__id" href="../index.html">Arthur Gao<span class="long"> / Index</span></a>
+  <span class="bar__role">Project 04 of 06</span>
+  <nav aria-label="Primary">
+    <ul class="bar__nav">
+      <li><a href="../index.html#experience">Experience<sup>06</sup></a></li>
+      <li><a href="../index.html#projects">Projects<sup>06</sup></a></li>
+      <li><a href="../index.html#film">Film</a></li>
+      <li><a href="../index.html#about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="p-head wrap grid">
+    <div class="p-crumb label">
+      <a href="../index.html#projects">← Index</a>
+      <span>04 / 06</span>
+    </div>
+    <h1 class="p-title">Embedded Chess</h1>
+    <p class="p-deck">Embedded Chess Project: Enhancing Chess Accessibility with Embedded Technologies</p>
+  </section>
+
+  <section class="p-meta wrap grid" aria-label="Project details">
+    <dl>
+      <div class="m"><dt>Summary</dt><dd class="m-sum">An embedded chess project that incorprated a custom PCB with 3D printed parts and software written in Rust to create a chessboard that detects the position of pieces and highlights possible moves when a piece is picked up</dd></div>
+      <div class="m"><dt>Course</dt><dd>CSC385 — University of Toronto</dd></div>
+      <div class="m"><dt>Timeframe</dt><dd>6 weeks</dd></div>
+      <div class="m"><dt>Hardware</dt><dd>ARM Cortex M4, 8x8 hall effect matrix, WS2812B-2020 LEDs</dd></div>
+      <div class="m"><dt>Software</dt><dd>no-std Rust, Tauri, Stockfish</dd></div>
+      <div class="m"><dt>Team</dt><dd>Arthur Gao, Taylor Whatley</dd></div>
+    </dl>
+  </section>
+
+  <!-- Reading surface: the article sits on paper; orange returns for the closing band. -->
+  <div class="paper">
+
+  <figure class="p-hero">
+    <img src="../images/chess.jpg" alt="The finished embedded chessboard with LEDs lit" width="1600" height="1200" />
+  </figure>
+
+
+  <div class="p-body wrap grid">
+    <aside class="p-aside label" aria-label="Contents">
+      <div class="stick">
+        <span>Contents (02)</span>
+        <ol>
+          <li><a href="#project-overview"><span>01</span> Project Overview</a></li>
+          <li><a href="#software"><span>02</span> Software</a></li>
+        </ol>
+      </div>
+    </aside>
+
+    <article class="prose" id="article">
+      <h2 id="project-overview">Project Overview</h2>
+      <p>The Embedded Chess Project was an exciting venture to experiment with embedded technologies. Our primary goal was to make the rules and movements of chess accessible to all players. When playing chess online, applications often highlight valid moves when a piece is selected and reject invalid moves. This makes learning the intricacies of piece movement more intuitive for beginners and understanding a position easier for experienced players.</p>
+
+      <figure class="video wide">
+        <div class="video-frame">
+          <iframe src="https://www.youtube.com/embed/y3YYd8azPUI" title="YouTube video player" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <figcaption>Fig. 01 — Watch the Project in Action</figcaption>
+      </figure>
+
+      <h3>Course Context and Project Goals</h3>
+      <p>We completed this project for CSC385—an embedded systems class at the University of Toronto. We were tasked with creating unique software using the ARM Cortex M4 discovery boards from our previous labs. To achieve our goals, our project consisted of three primary components: the sensing and displaying circuitry, the ChessMan software, and the outer shell.</p>
+
+      <h3>Hardware</h3>
+      <p>The sensing circuit was designed as an 8x8 magnetic hall effect switch matrix. Each hall effect switch was wired in series with a diode to a unique combination of column and row. By putting +5V on one column at a time and reading the voltage on each individual row, we could determine the status of 64 board squares using just 16 GPIO ports on the microcontroller. Given chess’s predefined starting position, we could track the current board position by monitoring changes since the initial setup. This approach eliminated the need for circuitry to identify specific pieces on any square.</p>
+      <p>To display possible moves and communicate invalid moves to the player, we used WS2812B-2020 individually addressable LEDs—one for each square on the chessboard. This choice allowed us to control all 64 LEDs using only a single GPIO port for communication. Initially, we planned to construct the sensing circuit by hand, but after spending approximately 20 hours making a 3x3 matrix, we opted to have PCBs manufactured for the entire circuit. We designed the schematic and board layout in EasyEDA and had them produced by JLCPCB.</p>
+      <figure>
+        <img src="../images/big_test.jpg" alt="The first test of our PCBs" width="1600" height="1200" loading="lazy" />
+        <figcaption>Fig. 02 — The first time we had all four PCBs hooked up together!</figcaption>
+      </figure>
+
+      <h2 id="software">Software</h2>
+
+      <h4>Embedded Software</h4>
+      <p>The software, written in no-std Rust, comprised three primary parts: the polling loop, the board position calculator, and external communications. The polling loop operated by sequentially bringing GPIO pins high and reading the corresponding pin levels to determine which squares were occupied. This loop took about 16ms to read the entire board and ran approximately every 26ms, ensuring that interactions with the board felt real-time. The remaining CPU time was used to compute possible moves based on the current position and communicate this information to our visualization tools.</p>
+      <p>Integrated into the software was a custom mini-engine that determined valid moves in a given board state, particularly when a piece was lifted. This possibility matrix was combined with any necessary display overlays and sent to the board through modified SPI communications to the LEDs. We displayed an artificial checkerboard pattern since the top of the board was translucent white to allow the LEDs to be visible. When a player lifted a piece, all valid moves for that piece were displayed in yellow. If a second piece was lifted simultaneously—except in a castling situation—it was placed onto a stack, assuming incorrectly lifted pieces would be returned to their original positions. The original square of the lifted piece was illuminated red, and if the piece was placed anywhere other than its origin, that square also turned red. This user prompting made it very difficult for the physical board state to become desynchronized from the software-tracked state.</p>
+
+      <h4>Desktop Application</h4>
+      <p>Additionally, the software communicates the current board position over USB to a computer running an additional desktop application written with Tauri. This application displays a visualization of the current board position and allows us to run more powerful engines like Stockfish on a position. While the external computer connection is not required for the board to function, it can be a useful addition.</p>
+
+      <h4>Future Enhancements: ESP32-C3 Integration</h4>
+      <p>We are currently in the process of developing a version of the PCBs that includes an ESP32-C3 processor. This processor is cheaper than the ARM processor we initially used and enables Wi-Fi and Bluetooth communications to a smartphone app rather than a desktop app, which we believe will be more useful.</p>
+      <figure>
+        <img src="../images/routed.png" alt="A render of the development PCB" width="1352" height="905" loading="lazy" />
+        <figcaption>Fig. 03 — A render of our development PCB ready for ordering</figcaption>
+      </figure>
+
+      <h3>Outer Shell Design</h3>
+      <p>The outer shell, 3D printed to house the wires connecting the PCBs and elevate the sensing circuit to the correct height, ensured consistent detection of pieces. The entire board was powered through a USB +5V connection. At peak LED output, the board drew a maximum of 2.5A, while typical usage required about 1.5A, making it compatible with a common 5V 3A 15W USB adapter.</p>
+
+      <h3>Challenges and Learning Opportunities</h3>
+      <p>This project, completed within a strict 6-week timeframe, presented several challenges and valuable learning opportunities. Building the initial 3x3 matrix by hand underscored the importance of efficient circuit design and led us to choose PCB manufacturing. Developing in no-std Rust posed unique challenges but offered significant experience in low-level programming and resource management. Ensuring real-time interaction required optimizing the polling loop and balancing CPU usage for move calculations and LED updates.</p>
+
+      <h3>Conclusion</h3>
+      <p>The Embedded Chess Project was a significant learning experience in embedded systems, circuit design, and software development. By seamlessly integrating hardware and software, we created a chessboard that enhances the learning and playing experience, making chess more accessible and enjoyable for all players.</p>
+
+      <h3>Acknowledgements</h3>
+      <p>This project was created my myself and teammate Taylor Whatley. We would like to thank Professor Mario Badar and Professor Paul Dietz for his guidance and support during the course of the project.</p>
+    </article>
+  </div>
+
+  </div>
+
+  <section class="sect p-next" aria-labelledby="more-h">
+    <div class="sect__head wrap grid">
+      <h2 class="sect__title" id="more-h">Index<sup>(06)</sup></h2>
+      <span class="sect__count label">Projects</span>
+    </div>
+    <ol class="rows">
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">01</span>
+            <h3 class="row__title"><a href="whispers.html">Whispers</a> <span class="row__aff label">(Interactive / AI / Story)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="whispers.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">02</span>
+            <h3 class="row__title"><a href="bigband.html">Big Band</a> <span class="row__aff label">(Agents / Merge Orchestration)</span></h3>
+            <span class="row__when label">Pickford AI</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="bigband.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">03</span>
+            <h3 class="row__title"><a href="shengji.html">Shengji AI</a> <span class="row__aff label">(Rust / PyTorch / Self-play)</span></h3>
+            <span class="row__when label">Side project</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="shengji.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">04</span>
+            <h3 class="row__title"><a href="#top" aria-current="page">Embedded Chess</a> <span class="row__aff label">(Embedded / Rust / PCB)</span></h3>
+            <span class="row__when label">CSC385</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <p class="label">You are here.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">05</span>
+            <h3 class="row__title"><a href="projection.html">Projection Mapping</a> <span class="row__aff label">(Web / Animation / Education)</span></h3>
+            <span class="row__when label">CSC490</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="projection.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__head wrap grid">
+            <span class="row__no label">06</span>
+            <h3 class="row__title"><a href="parsing.html">GPT Parsing</a> <span class="row__aff label">(Data / GPT-4 / Research)</span></h3>
+            <span class="row__when label">SCOTUS data</span>
+          </div>
+          <div class="row__detail wrap grid">
+            <div class="row__text">
+              <a class="row__go" href="parsing.html">Read the project <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </li>
+    </ol>
+  </section>
+</main>
+
+<footer class="foot wrap grid">
+  <p class="foot__big"><a href="../index.html">Arthur Gao</a></p>
+  <span class="foot__l label">Turning code into campfire stories</span>
+  <nav class="foot__soc label soc" aria-label="Elsewhere"><a href="https://www.linkedin.com/in/-arthurgao-/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://x.com/arthuregao" target="_blank" rel="noopener">X <span aria-hidden="true">↗</span></a><span aria-hidden="true"> · </span><a href="https://www.instagram.com/arthurgaounofficial/" target="_blank" rel="noopener">Instagram <span aria-hidden="true">↗</span></a></nav>
+  <span class="foot__r label"><a href="#top">Back to top ↑</a></span>
+</footer>
+</body>
+</html>
